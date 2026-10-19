@@ -4,7 +4,7 @@ Kotlin + Jetpack Compose ile geliştirilmiş, Türkçe ve önce çevrimdışı �
 
 ## Kurulum
 
-Yerel kurulum paketi: `dist/Denge-1.0.0.apk`. Derleme çıktıları Git reposuna eklenmez. Paketi `./gradlew assembleRelease` ile üretip `app/build/outputs/apk/release/app-release.apk` konumundan telefona aktararak yükleyebilirsin. Bu paket R8 ile küçültülmüş ve geliştirme anahtarıyla imzalanmış kişisel kurulum sürümüdür; mağaza dağıtımı için özel imzalama anahtarı gerekir.
+Yerel kurulum paketi: `dist/Denge-1.1.0.apk`. Derleme çıktıları Git reposuna eklenmez. Paketi `./gradlew assembleRelease` ile üretip `app/build/outputs/apk/release/app-release.apk` konumundan telefona aktararak yükleyebilirsin. Bu paket R8 ile küçültülmüş ve geliştirme anahtarıyla imzalanmış kişisel kurulum sürümüdür; mağaza dağıtımı için özel imzalama anahtarı gerekir.
 
 Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yapılandırmasını çalıştır. JDK 17 veya 21, Android SDK 36 gerekir. Bilgisayara özel `local.properties` dosyasını kendi SDK yolunla oluştur; dosya sürüm kontrolüne dahil değildir.
 
@@ -22,7 +22,7 @@ Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yap
 3. Adım/kilo kartına dokunup Huawei Sağlık'taki günlük toplamı ve istersen tartı kaydını gir. Boş adım alanı bilinmeyendir; `0` gerçek sıfır kaydıdır.
 4. Antrenmanını kendin ekle veya **Hevy'den al** düğmesini kullan. Antrenmansız günlerde **Bugün dinleniyorum** seçeneği bulunur.
 5. Son öğününden sonra **Günü kapat**. Gün kendiliğinden kapanmaz. Kapalı gün yeniden açılıp düzenlenebilir; eski AI sonucu arşivlenir.
-6. **Gidişat** ekranında 7/30 günlük istatistikleri ve kilo grafiğini, **Hafıza** ekranında AI değerlendirmelerini gör.
+6. **Gidişat** ekranında gerçek takvim haftaları ve aylar arasında gezin. Genel, Beslenme, Hareket ve Kilo bölümlerinden istatistiklerini incele. Takvimde bir güne dokunarak o günün kayıtlarını aç. **Hafıza** ekranında AI değerlendirmelerini gör.
 7. **Ayarlar → JSON yedeği kaydet** ile düzenli dış yedek al. **Hafıza** ekranından okunabilir Markdown çıktısı da alabilirsin.
 
 ## Bağlantılar
@@ -45,9 +45,23 @@ Health Connect adım verileri Android'in `aggregate` API'siyle okunur; farklı k
 
 ### Hevy
 
-Hevy'nin resmi API'si **Hevy Pro** ve kişisel API anahtarı gerektirir. Anahtarı [Hevy geliştirici ayarlarından](https://hevy.com/settings?developer) alıp uygulamaya kaydet.
+Hevy'nin resmi API'si **Hevy Pro** ve kişisel API anahtarı gerektirir. **Ayarlar → Hevy → Hevy API anahtarını al** bağlantısını aç; anahtarı uygulamadaki alana gir ve **Bağlan ve doğrula** düğmesine dokun. Hesaba erişim `GET /v1/workouts/count` ile doğrulanır; başarılı olmadan yeni Hevy anahtarı kaydedilmez. Anahtar, sohbete veya Git reposuna yazılmaz.
 
-Antrenman yaptığında **Hevy'den al** düğmesine dokun. Sayfalanmış geçmişin tüm sayfaları okunur; seçili günün kaydedilmiş saat dilimine göre o gün başlayan antrenmanlar alınır. Başlık, süre, hareketler, setler, tekrarlar, ağırlıklar, mesafeler, süreler ve kaynak JSON saklanır. Ham API verisi AI hafızasına dahil edilir. Aynı kaynak kimliğiyle eşitleme tekrarlandığında kayıt çoğalmaz; yerel manuel kayıtların korunur. Bir sayfa başarısız olursa kısmi veri kaydedilmez. Güvenlik sınırı 500 sayfadır; sınır aşılırsa kayıtlar kesilerek aktarılmaz.
+**Antrenman geçmişini içe aktar** ile bütün Hevy geçmişini tek seferde aktar. İlerleme sayfa sayfa gösterilir. İstek başındaki ve sonundaki hesap sayısı, alınan benzersiz antrenman sayısıyla eşleşmeden tek bir günlük kayıt bile değiştirilmez. Tekrarlanan aktarım antrenmanları çoğaltmaz; açık günler güncellenir, manuel öğün/not/antrenmanlar korunur. Kapalı günlere ait kayıtlar ve AI kopyaları değiştirilmez; kaç günün korunduğu gösterilir. Kapalı bir günü güncellemek için önce yeniden aç. Hevy'de hiç kayıt bulunmayan tarihler otomatik dinlenme olarak işaretlenmez. Kaynaktan silinmiş geçmiş kayıtlar başka günlerden otomatik temizlenmez; bu işlem tam bir silme aynalaması değildir.
+
+Sonraki antrenmanlarında Bugün ekranındaki **Hevy'den al** düğmesini de kullanabilirsin. Sayfalanmış geçmişin tüm sayfaları okunur; seçili günün kaydedilmiş saat dilimine göre o gün başlayan antrenmanlar alınır. Başlık, süre, hareketler, setler, tekrarlar, ağırlıklar, mesafeler, süreler ve kaynak JSON saklanır. Ham API verisi AI hafızasına dahil edilir. Aynı kaynak kimliğiyle eşitleme tekrarlandığında kayıt çoğalmaz; yerel manuel kayıtların korunur. Bir sayfa başarısız olursa kısmi veri kaydedilmez. Güvenlik sınırı 500 sayfadır; sınır aşılırsa kayıtlar kesilerek aktarılmaz.
+
+## İstatistikler · 1.1.0
+
+- **Gerçek hafta / ay seçimi:** Pazartesi başlayan haftalar, ayın tamamını gösteren takvim, önceki/sonraki dönem gezinmesi; gelecek dönemlere geçiş yok.
+- **Antrenman takvimi:** antrenman, açıkça bildirilen dinlenme, bilinmeyen ve gelecek günler ayrı; tarih seçimi günlük kaydını açar. Bir günde iki seans, bir antrenman günü ve iki seans sayılır.
+- **Genel:** antrenman gün ve seans sayısı, toplam süre, kalori/adım ortalamaları, kayıt devamlılığı, kişisel hedeflere ulaşma ve önceki dönemle ortalama farkları. Karşılaştırmaların kayıt kapsamı ayrıca gösterilir.
+- **Beslenme:** enerji toplamı/ortalaması, günlük enerji grafiği, protein/karbonhidrat/yağ ortalamaları, öğün sayısı ve öğün türü dağılımı. Kalori hedefine yakınlık o günkü hedefin ±%10 aralığıyla açıkça tanımlanır.
+- **Hareket:** antrenman günü/seansı/süresi, ortalama seans, haftanın hangi günlerinde spor yaptığın, dinlenme ve bilinmeyen gün sayısı, toplam/ortalama/en yüksek adım ve günlük adım grafiği. Kas veya egzersiz hacmi analizi eklenmez.
+- **Kilo:** ilk-son ölçüm farkı, dönem ortalaması, min/maks, hedef kilo, tarih aralıklarını koruyan ölçüm grafiği ve haftalık tartı ortalamaları. Tek tartımdan kilo değişimi üretilmez.
+- **Doğru paydalar:** beslenme ortalamaları kapalı günlerden, adım ortalamaları adım girilmiş günlerden hesaplanır. Bilinmeyen günler sıfır sayılmaz; girilmiş `0` ise gerçek bir ölçümdür. Geçmiş günlerin kendi hedefleri kullanılır. Hedefi 0 olan protein günleri başarı paydasına katılmaz.
+
+Hevy bağlantı/aktarım zamanları kalıcıdır; gerçek bağlantı durumu anahtarın varlığı ve son doğrulama zamanıyla birlikte gösterilir. Yeni alanlar varsayılan değerlere sahiptir; 1.0.0 kayıt ve yedekleri okunmaya devam eder.
 
 ## Hafıza ve veri koruması
 
@@ -84,6 +98,8 @@ Otomatik testler ham geçmişin ve Hevy detaylarının bağlamda korunmasını, 
 
 ## Ekran görüntüleri ve test kaydı
 
-Son kurulum paketinden alınan görüntüler: [Bugün](screenshots/02-today.png), [Gidişat](screenshots/03-progress.png), [Hafıza](screenshots/04-memory.png), [Ayarlar](screenshots/05-settings.png).
+1.1.0 cihaz testlerinden: [Hareket istatistikleri](screenshots/statistics-preview/06-statistics-activity.png), [Antrenman takvimi](screenshots/statistics-preview/07-training-calendar.png), [Hevy bağlantısı](screenshots/statistics-preview/08-hevy-connection.png). İstatistik görüntülerindeki iki antrenman geçici test verisidir; uygulamaya örnek veri gömülmez.
 
-[Doğrulama ayrıntıları](docs/VERIFICATION.md): 12 birim testi ve 5 Android cihaz testi başarılı; lint 0 hata.
+İlk sürümün boş kayıt akışı: [Bugün](screenshots/02-today.png), [Hafıza](screenshots/04-memory.png), [Ayarlar](screenshots/05-settings.png).
+
+[Doğrulama ayrıntıları](docs/VERIFICATION.md) test kapsamını ve cihaz doğrulamasını içerir. Derleme çıktıları, günlükler, yerel SDK yolu, anahtarlar ve kişisel JSON/Markdown yedekleri Git dışında tutulur. Gradle dağıtımı resmi SHA-256 değeriyle doğrulanır.

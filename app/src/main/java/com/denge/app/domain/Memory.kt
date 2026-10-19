@@ -31,6 +31,12 @@ Kayıtlar yeterli değilse bunu açıkça söyle. Kalıcı kullanıcı notların
             put("closedDayCaloriesAverage", if (closed.isEmpty()) JsonNull else JsonPrimitive(closed.map { it.calories }.average()))
             put("knownStepDays", range.count { it.steps != null }); put("knownStepsTotal", range.sumOf { it.steps ?: 0 })
             put("workoutCount", range.sumOf { it.workouts.size })
+            put("trainingDays", range.count { it.trained() })
+            put("trainingDates", buildJsonArray { range.filter { it.trained() }.forEach { add(it.date) } })
+            put("restDays", range.count { !it.trained() && it.workoutStatus == "rest" })
+            put("workoutMinutes", range.flatMap { it.workouts }.distinctBy { it.id }.sumOf { it.minutes })
+            put("proteinAverageClosedDays", if (closed.isEmpty()) JsonNull else JsonPrimitive(closed.map { it.protein }.average()))
+            put("stepTargetDays", range.count { it.steps != null && it.steps >= it.goals.steps })
             put("weights", buildJsonArray { range.filter { it.weight != null }.forEach { add(buildJsonObject { put("date", it.date); put("kg", it.weight) }) } })
         }
         val payload = buildJsonObject {
@@ -42,6 +48,7 @@ Kayıtlar yeterli değilse bunu açıkça söyle. Kalıcı kullanıcı notların
                 included.groupBy { it.date.take(7) }.forEach { (monthKey, days) -> add(buildJsonObject {
                     put("month", monthKey); put("recordedDays", days.count { it.hasData }); put("closedDays", days.count { it.closed })
                     put("caloriesTotalClosed", days.filter { it.closed }.sumOf { it.calories }); put("workoutCount", days.sumOf { it.workouts.size })
+                    put("trainingDays", days.count { it.trained() }); put("workoutMinutes", days.flatMap { it.workouts }.distinctBy { it.id }.sumOf { it.minutes })
                 }) }
             })
             put("completeHistory", buildJsonArray {

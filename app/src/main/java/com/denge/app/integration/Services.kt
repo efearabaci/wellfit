@@ -49,41 +49,58 @@ class RemoteServices(
         choice["message"]?.jsonObject?.get("content")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
             ?: throw IOException("AI boş bir özet döndürdü.")
     }
-    suspend fun workouts(key: String, date: LocalDate, zone: ZoneId): List<Workout> = withContext(Dispatchers.IO) {
-        val result = linkedMapOf<String, Workout>()
+    suspend fun verifyHevy(key: String): Int = withContext(Dispatchers.IO) {
+        require(key.isNotBlank() && !key.contains('\n') && !key.contains('\r')) { "Geçerli bir Hevy API anahtarı gir." }
+        val result = execute(Request.Builder().url("$hevyUrl/v1/workouts/count").header("api-key", key).build())
+        result["workout_count"]?.jsonPrimitive?.intOrNull?.takeIf { it >= 0 }
+            ?: throw IOException("Hevy antrenman sayısı okunamadı.")
+    }
+
+    suspend fun workouts(key: String, date: LocalDate, zone: ZoneId): List<Workout> =
+        fetchHevyHistory(key, zone).filter { it.date == date }.map { it.workout }
+
+    suspend fun fetchHevyHistory(key: String, zone: ZoneId, progress: (Int, Int) -> Unit = { _, _ -> }): List<HevyRecord> = withContext(Dispatchers.IO) {
+        val result = linkedMapOf<String, HevyRecord>()
         var page = 1
+        var expectedPages: Int? = null
         do {
             val json = execute(Request.Builder().url("$hevyUrl/v1/workouts?page=$page&pageSize=10").header("api-key", key).build())
-            val count = json["page_count"]?.jsonPrimitive?.int ?: throw IOException("Hevy sayfalama bilgisi eksik.")
+            val count = json["page_count"]?.jsonPrimitive?.intOrNull ?: throw IOException("Hevy sayfalama bilgisi eksik.")
             require(count in 0..500) { "Hevy geçmişi güvenli eşitleme sınırını aştı. Hiçbir kayıt kısmen aktarılmadı." }
+            if (expectedPages != null && expectedPages != count) throw IOException("Hevy geçmişi aktarım sırasında değişti. Kısmi kayıt yapılmadı; yeniden dene.")
+            expectedPages = count
             val records = json["workouts"]?.jsonArray ?: throw IOException("Hevy antrenman listesi eksik.")
             records.forEach { element ->
                 val w = element.jsonObject
                 val start = Instant.parse(w.getValue("start_time").jsonPrimitive.content)
-                if (start.atZone(zone).toLocalDate() == date) {
-                    val end = Instant.parse(w.getValue("end_time").jsonPrimitive.content)
-                    val exercises = w["exercises"]?.jsonArray ?: throw IOException("Hevy hareket detayları eksik.")
-                    val notes = exercises.joinToString("\n\n") { exercise ->
-                        val e = exercise.jsonObject
-                        val sets = e["sets"]?.jsonArray.orEmpty().mapIndexed { i, set ->
-                            val s = set.jsonObject
-                            fun value(k: String, unit: String) = s[k]?.jsonPrimitive?.contentOrNull?.let { "$it $unit" }
-                            "${i + 1}. set · " + listOfNotNull(value("weight_kg", "kg"), value("reps", "tekrar"), value("duration_seconds", "sn"), value("distance_meters", "m"), value("rpe", "RPE")).joinToString(" · ")
-                        }.joinToString("\n")
-                        listOfNotNull(e["title"]?.jsonPrimitive?.contentOrNull, e["notes"]?.jsonPrimitive?.contentOrNull, sets).filter { it.isNotBlank() }.joinToString("\n")
-                    }
-                    val hasCardio = exercises.any { e -> e.jsonObject["sets"]?.jsonArray.orEmpty().any { s ->
-                        (s.jsonObject["duration_seconds"]?.jsonPrimitive?.doubleOrNull ?: 0.0) > 0 || (s.jsonObject["distance_meters"]?.jsonPrimitive?.doubleOrNull ?: 0.0) > 0
-                    } }
-                    val id = "hevy:" + w.getValue("id").jsonPrimitive.content
-                    result[id] = Workout(id, w["title"]?.jsonPrimitive?.content ?: "Hevy antrenmanı", Duration.between(start, end).toMinutes().toInt().coerceIn(0, 2880),
-                        if (hasCardio) "Kuvvet / kardiyo" else "Kuvvet", notes, "Hevy", element.toString())
+                val end = Instant.parse(w.getValue("end_time").jsonPrimitive.content)
+                require(end >= start) { "Hevy antrenman zamanı geçersiz. Aktarım yapılmadı." }
+                val exercises = w["exercises"]?.jsonArray ?: throw IOException("Hevy hareket detayları eksik.")
+                val notes = exercises.joinToString("\n\n") { exercise ->
+                    val e = exercise.jsonObject
+                    val sets = e["sets"]?.jsonArray.orEmpty().mapIndexed { i, set ->
+                        val setData = set.jsonObject
+                        fun value(k: String, unit: String) = setData[k]?.jsonPrimitive?.contentOrNull?.let { "$it $unit" }
+                        "${i + 1}. set · " + listOfNotNull(value("weight_kg", "kg"), value("reps", "tekrar"), value("duration_seconds", "sn"), value("distance_meters", "m"), value("rpe", "RPE")).joinToString(" · ")
+                    }.joinToString("\n")
+                    listOfNotNull(e["title"]?.jsonPrimitive?.contentOrNull, e["notes"]?.jsonPrimitive?.contentOrNull, sets).filter { it.isNotBlank() }.joinToString("\n")
                 }
+                // Duration-only sets can be planks: do not label every timed strength set as cardio.
+                val hasDistance = exercises.any { e -> e.jsonObject["sets"]?.jsonArray.orEmpty().any { set ->
+                    (set.jsonObject["distance_meters"]?.jsonPrimitive?.doubleOrNull ?: 0.0) > 0
+                } }
+                val id = "hevy:" + w.getValue("id").jsonPrimitive.content
+                val workout = Workout(id, w["title"]?.jsonPrimitive?.content ?: "Hevy antrenmanı",
+                    Duration.between(start, end).toMinutes().toInt().coerceIn(0, 2880),
+                    if (hasDistance) "Mesafe içeren antrenman" else "Hevy antrenmanı", notes, "Hevy", element.toString())
+                result[id] = HevyRecord(start.atZone(zone).toLocalDate(), workout)
             }
+            progress(page, maxOf(1, count))
             page++
         } while (page <= count)
         result.values.toList()
     }
+
 }
 
 class StepService(private val context: Context) {

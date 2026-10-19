@@ -37,10 +37,12 @@ data class Day(
     val protein get() = meals.sumOf { it.protein }
     val carbs get() = meals.sumOf { it.carbs }
     val fat get() = meals.sumOf { it.fat }
-    val hasData get() = meals.isNotEmpty() || steps != null || weight != null || workouts.isNotEmpty() || note.isNotBlank() || closed
+    val hasData get() = meals.isNotEmpty() || steps != null || weight != null || workouts.isNotEmpty() || workoutStatus != "unknown" || note.isNotBlank() || closed
 }
 @Serializable
-data class AppState(val schema: Int = 1, val revision: Long = 0, val profile: Profile = Profile(), val days: Map<String, Day> = emptyMap(), val lastExportAt: String? = null)
+data class HevyConnection(val verifiedAt: String? = null, val syncedAt: String? = null, val workoutsOnAccount: Int? = null)
+@Serializable
+data class AppState(val schema: Int = 1, val revision: Long = 0, val profile: Profile = Profile(), val days: Map<String, Day> = emptyMap(), val lastExportAt: String? = null, val hevy: HevyConnection = HevyConnection())
 
 fun AppState.day(date: LocalDate): Day = days[date.toString()] ?: Day(date.toString(), goals = profile.goals)
 fun AppState.changeDay(date: String, update: (Day) -> Day): AppState {
@@ -51,6 +53,9 @@ fun AppState.changeDay(date: String, update: (Day) -> Day): AppState {
 fun validateState(state: AppState) {
     require(state.schema == 1) { "Bu yedek sürümü desteklenmiyor." }
     state.profile.goals.validate()
+    state.hevy.verifiedAt?.let { java.time.Instant.parse(it) }
+    state.hevy.syncedAt?.let { java.time.Instant.parse(it) }
+    require(state.hevy.workoutsOnAccount == null || state.hevy.workoutsOnAccount >= 0)
     require(state.profile.name.length <= 100 && state.profile.memory.length <= 20000 && state.profile.model.matches(Regex("[a-zA-Z0-9._:-]{1,100}"))) { "Profil bilgileri geçersiz." }
     require(state.profile.targetWeight == null || (state.profile.targetWeight.isFinite() && state.profile.targetWeight in 20.0..500.0))
     state.days.forEach { (date, d) ->

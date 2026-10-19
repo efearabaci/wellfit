@@ -19,6 +19,7 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
     val busy = MutableStateFlow(false)
     val events = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val keysRevision = MutableStateFlow(0)
+    val hevyProgress = MutableStateFlow<String?>(null)
     init { observe() }
     private fun observe() {
         viewModelScope.launch {
@@ -71,6 +72,35 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
         graph.repo.edit(date) { it.copy(workouts = it.workouts.filterNot { w -> w.source == "Hevy" } + workouts,
             workoutStatus = if (workouts.isNotEmpty() || it.workouts.any { w -> w.source != "Hevy" }) "trained" else "unknown") }
         events.emit(if (workouts.isEmpty()) "Hevy'de bu güne ait antrenman bulunamadı." else "${workouts.size} antrenman, tüm hareket ve setleriyle eşitlendi.")
+    }
+    fun connectHevy(candidate: String, done: () -> Unit = {}) = action("Hevy bağlantısı doğrulandı", done) {
+        val key = candidate.trim().ifBlank { graph.secrets.get("hevy") }
+        val count = graph.remote.verifyHevy(key)
+        graph.secrets.set("hevy", key)
+        graph.repo.update { it.copy(hevy = it.hevy.copy(verifiedAt = Instant.now().toString(), workoutsOnAccount = count)) }
+        keysRevision.value++
+    }
+    fun importHevyHistory() = action {
+        require(graph.secrets.has("hevy")) { "Önce Hevy API anahtarını ekleyip bağlantıyı doğrula." }
+        try {
+            val key = graph.secrets.get("hevy")
+            hevyProgress.value = "Hevy hesabı doğrulanıyor…"
+            val beforeCount = graph.remote.verifyHevy(key)
+            val records = graph.remote.fetchHevyHistory(key, ZoneId.systemDefault()) { page, total ->
+                hevyProgress.value = "Antrenmanlar alınıyor · $page / $total sayfa"
+            }
+            val afterCount = graph.remote.verifyHevy(key)
+            require(beforeCount == afterCount && records.size == afterCount) { "Hevy geçmişi aktarım sırasında değişti. Kısmi kayıt yapılmadı; yeniden dene." }
+            var result: HevyImportResult? = null
+            val now = Instant.now().toString()
+            graph.repo.update { old ->
+                HevyImport.merge(old, records, now).also { result = it }.state.let { next ->
+                    next.copy(hevy = next.hevy.copy(verifiedAt = now, workoutsOnAccount = afterCount))
+                }
+            }
+            events.emit(result!!.let { "${it.importedWorkouts} antrenman, ${it.updatedDays} güne aktarıldı." +
+                if (it.skippedClosedDays > 0) " ${it.skippedClosedDays} kapalı gün korundu; güncellemek için yeniden açabilirsin." else "" })
+        } finally { hevyProgress.value = null }
     }
     fun syncSteps(date: LocalDate, explicit: Boolean = false) {
         viewModelScope.launch {
@@ -125,9 +155,10 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
     fun profile(profile: Profile, deepseek: String, hevy: String, done: () -> Unit = {}) = action("Ayarlar kaydedildi", done) {
         profile.goals.validate()
         if (deepseek.isNotBlank()) graph.secrets.set("deepseek", deepseek)
+        val verifiedCount = if (hevy.isNotBlank()) graph.remote.verifyHevy(hevy) else null
         if (hevy.isNotBlank()) graph.secrets.set("hevy", hevy)
         val s = graph.repo.update { old ->
-            old.copy(profile = profile, days = old.days.mapValues { (_, d) ->
+            old.copy(profile = profile, hevy = if (verifiedCount != null) old.hevy.copy(verifiedAt = Instant.now().toString(), workoutsOnAccount = verifiedCount) else old.hevy, days = old.days.mapValues { (_, d) ->
                 if (!d.closed && d.date == LocalDate.now().toString()) d.copy(goals = profile.goals) else d
             })
         }
@@ -135,7 +166,11 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
         if (!profile.aiConsent) s.days.values.forEach { d -> d.recap?.let { WorkManager.getInstance(getApplication<Application>()).cancelUniqueWork("recap:${it.id}") } }
         else RecapWorker.recover(getApplication(), s)
     }
-    fun removeKey(name: String) = action("Anahtar kaldırıldı") { graph.secrets.set(name, ""); keysRevision.value++ }
+    fun removeKey(name: String) = action("Anahtar kaldırıldı") {
+        graph.secrets.set(name, "")
+        if (name == "hevy") graph.repo.update { it.copy(hevy = it.hevy.copy(verifiedAt = null, workoutsOnAccount = null)) }
+        keysRevision.value++
+    }
     fun export(uri: Uri, markdown: Boolean = false) = action(if (markdown) "Hafıza dışa aktarıldı" else "Yedek kaydedildi") {
         val s = graph.repo.read()
         graph.backup.export(uri, s.copy(lastExportAt = Instant.now().toString()), markdown)
@@ -151,7 +186,8 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
         }
         // Import never overwrites a local day: conflicts must be resolved by retaining the local record.
         graph.repo.update { old ->
-            s.copy(profile = if (old.profile.onboarded) old.profile else s.profile.copy(aiConsent = false, healthEnabled = false), days = s.days + old.days)
+            s.copy(profile = if (old.profile.onboarded) old.profile else s.profile.copy(aiConsent = false, healthEnabled = false), days = s.days + old.days,
+                hevy = if (old.profile.onboarded) old.hevy else s.hevy.copy(verifiedAt = null, workoutsOnAccount = null))
         }.also { RecapWorker.recover(getApplication(), it) }
     }
     fun recoverLocal() = action("Kurtarma kopyası doğrulandı ve geri yüklendi.") {

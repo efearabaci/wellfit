@@ -48,4 +48,41 @@ class RemoteServicesTest {
             catch (e: ApiException) { assertEquals(401, e.status); assertFalse(e.message!!.contains("secret")); assertFalse(e.message!!.contains("private")) }
         }
     }
+    @Test fun `Hevy verifies account access without revealing a key`() = runTest {
+        MockWebServer().use { server ->
+            server.start(); server.enqueue(MockResponse().setBody("""{"workout_count":42}"""))
+            val api = RemoteServices(hevyUrl = server.url("/").toString().trimEnd('/'))
+            assertEquals(42, api.verifyHevy("test-key"))
+            val request = server.takeRequest()
+            assertEquals("/v1/workouts/count", request.path)
+            assertEquals("test-key", request.getHeader("api-key"))
+        }
+    }
+    @Test fun `Hevy history changed during pagination is rejected rather than partially imported`() = runTest {
+        MockWebServer().use { server ->
+            server.start()
+            server.enqueue(MockResponse().setBody("""{"page_count":2,"workouts":[]}"""))
+            server.enqueue(MockResponse().setBody("""{"page_count":3,"workouts":[]}"""))
+            val api = RemoteServices(hevyUrl = server.url("/").toString().trimEnd('/'))
+            try { api.fetchHevyHistory("key", ZoneId.of("Europe/Istanbul")); fail("Changed source must fail") }
+            catch (_: java.io.IOException) { }
+        }
+    }
+    @Test fun `empty Hevy accounts are supported and every page reports progress`() = runTest {
+        MockWebServer().use { server ->
+            server.start(); server.enqueue(MockResponse().setBody("""{"page_count":0,"workouts":[]}"""))
+            val progress = mutableListOf<Pair<Int, Int>>()
+            val result = RemoteServices(hevyUrl = server.url("/").toString().trimEnd('/')).fetchHevyHistory("key", ZoneId.of("Europe/Istanbul")) { page, count -> progress += page to count }
+            assertTrue(result.isEmpty()); assertEquals(listOf(1 to 1), progress)
+        }
+    }
+    @Test fun `timed strength sets do not become fabricated cardio sessions`() = runTest {
+        MockWebServer().use { server ->
+            server.start(); server.enqueue(MockResponse().setBody("""{"page_count":1,"workouts":[{"id":"plank","title":"Core","start_time":"2026-10-19T15:00:00Z","end_time":"2026-10-19T15:30:00Z","exercises":[{"title":"Plank","sets":[{"duration_seconds":60}]}]}]}"""))
+            val result = RemoteServices(hevyUrl = server.url("/").toString().trimEnd('/')).fetchHevyHistory("key", ZoneId.of("Europe/Istanbul"))
+            assertEquals("Hevy antrenmanı", result.single().workout.kind)
+            assertTrue(result.single().workout.notes.contains("60 sn"))
+        }
+    }
+
 }
