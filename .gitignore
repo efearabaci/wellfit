@@ -1,0 +1,31 @@
+.gradle/
+.kotlin/
+**/build/
+local.properties
+.idea/
+*.jks
+*.keystore
+.DS_Store
+
+# Local builds and diagnostics
+/dist/
+*.apk
+*.aab
+*.hprof
+/docs/device-test-results.txt
+
+# Credentials, signing material and personal journal exports
+.env
+.env.*
+!.env.example
+**/keystore.properties
+**/secrets.properties
+*.p12
+*.pem
+*.db
+*.db-wal
+*.db-shm
+/backups/
+/exports/
+denge-yedek-*.json
+denge-hafiza-*.md
