@@ -3,6 +3,7 @@ package com.denge.app.ui
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.denge.app.DengeApplication
@@ -11,8 +12,13 @@ import com.denge.app.integration.RecapWorker
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.time.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 
-class DengeViewModel(app: Application) : AndroidViewModel(app) {
+@Serializable
+data class AiMealDraft(val text: String = "", val meals: List<Meal> = emptyList(), val message: String = "", val error: String? = null, val loading: Boolean = false)
+
+class DengeViewModel(app: Application, private val savedState: SavedStateHandle) : AndroidViewModel(app) {
     val graph = (app as DengeApplication).graph
     val state = MutableStateFlow<AppState?>(null)
     val loadError = MutableStateFlow<String?>(null)
@@ -20,7 +26,12 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
     val events = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val keysRevision = MutableStateFlow(0)
     val hevyProgress = MutableStateFlow<String?>(null)
-    init { observe() }
+    val aiMealDraft = MutableStateFlow(runCatching { savedState.get<String>("aiMealDraft")?.let { JsonCodec.decodeFromString<AiMealDraft>(it).copy(loading = false) } }.getOrNull() ?: AiMealDraft())
+    private var aiMealJob: Job? = null
+    init {
+        observe()
+        viewModelScope.launch { aiMealDraft.collect { savedState["aiMealDraft"] = JsonCodec.encodeToString(it.copy(loading = false)) } }
+    }
     private fun observe() {
         viewModelScope.launch {
             try {
@@ -44,6 +55,36 @@ class DengeViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun meal(date: LocalDate, value: Meal, done: () -> Unit) = action("Öğün kaydedildi", done) {
         value.validate(); graph.repo.edit(date) { d -> d.copy(meals = d.meals.filterNot { it.id == value.id } + value) }
+    }
+    fun resetAiMeal() { aiMealJob?.cancel(); aiMealDraft.value = AiMealDraft() }
+    fun cancelAiMeal() { aiMealJob?.cancel(); aiMealDraft.update { it.copy(loading = false) } }
+    fun aiMealText(text: String) { if (!aiMealDraft.value.loading) aiMealDraft.value = AiMealDraft(text = text) }
+    fun editAiMeal(meal: Meal) { aiMealDraft.update { it.copy(meals = it.meals.map { old -> if (old.id == meal.id) meal else old }) } }
+    fun removeAiMeal(id: String) { aiMealDraft.update { it.copy(meals = it.meals.filterNot { m -> m.id == id }) } }
+    fun understandMeals(category: String, time: String) {
+        if (aiMealDraft.value.loading || busy.value) return
+        val input = aiMealDraft.value.text.trim()
+        aiMealDraft.value = AiMealDraft(text = input, loading = true)
+        aiMealJob = viewModelScope.launch {
+            try {
+                require(graph.secrets.has("deepseek")) { "Önce Ayarlar'dan DeepSeek API anahtarını ekle." }
+                val profile = graph.repo.read().profile
+                val result = graph.remote.understandMeals(graph.secrets.get("deepseek"), profile.model, input, category, time)
+                aiMealDraft.value = AiMealDraft(input, result.first, result.second)
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { aiMealDraft.value = AiMealDraft(text = input, error = e.message ?: "Öğünler anlaşılamadı. Tekrar dene.") }
+        }
+    }
+    fun saveAiMeals(date: LocalDate, done: () -> Unit) = action("Öğünler kaydedildi", done) {
+        val meals = aiMealDraft.value.meals
+        require(meals.isNotEmpty() && !aiMealDraft.value.loading) { "Önce yediklerini AI ile hazırla." }
+        meals.forEach { it.validate() }
+        // All confirmed items commit together. Repeated taps cannot create duplicate records.
+        graph.repo.edit(date) { day ->
+            require(meals.none { m -> day.meals.any { it.id == m.id } }) { "Bu öğünler zaten kaydedildi." }
+            day.copy(meals = day.meals + meals)
+        }
+        resetAiMeal()
     }
     fun deleteMeal(date: LocalDate, id: String, done: () -> Unit) = action("Öğün silindi", done) { graph.repo.edit(date) { it.copy(meals = it.meals.filterNot { m -> m.id == id }) } }
     fun metrics(date: LocalDate, steps: Int?, weight: Double?, done: () -> Unit) = action("Güncellendi", done) {

@@ -51,8 +51,10 @@ class PeriodStatistics(val state: AppState, val period: StatsPeriod) {
     val caloriesTotal = closedDays.sumOf { it.calories.toLong() }
     val caloriesAverage: Double? = closedDays.takeIf { it.isNotEmpty() }?.map { it.calories }?.average()
     val proteinAverage: Double? = closedDays.takeIf { it.isNotEmpty() }?.map { it.protein }?.average()
-    val carbsAverage: Double? = closedDays.takeIf { it.isNotEmpty() }?.map { it.carbs }?.average()
-    val fatAverage: Double? = closedDays.takeIf { it.isNotEmpty() }?.map { it.fat }?.average()
+    val knownCarbDays = closedDays.filter { it.carbs != null }
+    val knownFatDays = closedDays.filter { it.fat != null }
+    val carbsAverage: Double? = knownCarbDays.takeIf { it.isNotEmpty() }?.map { it.carbs!! }?.average()
+    val fatAverage: Double? = knownFatDays.takeIf { it.isNotEmpty() }?.map { it.fat!! }?.average()
     val stepsTotal = stepDays.sumOf { it.steps!!.toLong() }
     val stepsAverage: Double? = stepDays.takeIf { it.isNotEmpty() }?.map { it.steps!! }?.average()
     val bestStepDay: Day? = stepDays.maxByOrNull { it.steps!! }

@@ -12,10 +12,12 @@ data class Goals(val calories: Int = 2200, val protein: Int = 140, val carbs: In
 @Serializable
 data class Profile(val name: String = "", val goals: Goals = Goals(), val targetWeight: Double? = null, val memory: String = "", val model: String = "deepseek-flash", val aiConsent: Boolean = false, val healthEnabled: Boolean = false, val onboarded: Boolean = false)
 @Serializable
-data class Meal(val id: String = UUID.randomUUID().toString(), val name: String, val category: String, val time: String, val calories: Int, val protein: Double, val carbs: Double, val fat: Double) {
+data class Meal(val id: String = UUID.randomUUID().toString(), val name: String, val category: String, val time: String, val calories: Int, val protein: Double, val carbs: Double? = null, val fat: Double? = null,
+    val aiSourceText: String? = null, val aiNote: String? = null) {
     fun validate() {
         require(name.isNotBlank() && name.length <= 200) { "Yemeğe bir isim ver (en fazla 200 karakter)." }
-        require(calories in 0..20000 && listOf(protein, carbs, fat).all { it.isFinite() && it in 0.0..3000.0 }) { "Kalori ve makroları kontrol et." }
+        require(calories in 0..20000 && listOfNotNull(protein, carbs, fat).all { it.isFinite() && it in 0.0..3000.0 }) { "Kalori ve makroları kontrol et." }
+        require((aiSourceText?.length ?: 0) <= 4000 && (aiNote?.length ?: 0) <= 2000) { "AI öğün açıklaması çok uzun." }
         java.time.LocalTime.parse(time)
     }
 }
@@ -35,8 +37,8 @@ data class Day(
 ) {
     val calories get() = meals.sumOf { it.calories }
     val protein get() = meals.sumOf { it.protein }
-    val carbs get() = meals.sumOf { it.carbs }
-    val fat get() = meals.sumOf { it.fat }
+    val carbs: Double? get() = if (meals.any { it.carbs == null }) null else meals.sumOf { it.carbs!! }
+    val fat: Double? get() = if (meals.any { it.fat == null }) null else meals.sumOf { it.fat!! }
     val hasData get() = meals.isNotEmpty() || steps != null || weight != null || workouts.isNotEmpty() || workoutStatus != "unknown" || note.isNotBlank() || closed
 }
 @Serializable

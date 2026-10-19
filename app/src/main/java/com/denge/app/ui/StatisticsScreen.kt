@@ -96,6 +96,7 @@ private fun shortDate(date: String) = LocalDate.parse(date).format(DateTimeForma
                         SmallStat("Karbonhidrat", stats.carbsAverage.display(" g"), Modifier.weight(1f))
                         SmallStat("Yağ", stats.fatAverage.display(" g"), Modifier.weight(1f))
                     }
+                    Text("Karbonhidrat: ${stats.knownCarbDays.size}, yağ: ${stats.knownFatDays.size} tam makro kayıtlı kapalı gün. Eksik makrolar ortalamaya katılmaz.", color = Muted, style = MaterialTheme.typography.bodySmall)
                     GoalLine("Protein hedefi", stats.proteinTargetDays, Forest)
                     GoalLine("Kalori hedefine yakın günler", stats.calorieTargetDays, Orange)
                     Text("Kaloride o günkü hedefin ±%10 aralığı; proteinde o günkü hedefe ulaşma sayılır. Protein hedefi 0 olan günler protein oranına katılmaz.", color = Muted, style = MaterialTheme.typography.bodySmall)

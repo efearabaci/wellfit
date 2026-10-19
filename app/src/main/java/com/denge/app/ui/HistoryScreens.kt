@@ -70,7 +70,7 @@ import java.time.format.DateTimeFormatter
         if (day.closed) item { Panel {
             Section("Kaydının özeti")
             Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) { SmallStat("kcal", number(day.calories), Modifier.weight(1f)); SmallStat("adım", day.steps?.let { number(it) } ?: "—", Modifier.weight(1f)); SmallStat("antrenman", day.workouts.size.toString(), Modifier.weight(1f)) }
-            Text("${day.meals.size} öğün · P ${number(day.protein)} / K ${number(day.carbs)} / Y ${number(day.fat)} g", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("${day.meals.size} öğün · P ${number(day.protein)} / K ${macroNumber(day.carbs)} / Y ${macroNumber(day.fat)} g", color = Muted, style = MaterialTheme.typography.bodySmall)
             if (day.note.isNotBlank()) Text(day.note, style = MaterialTheme.typography.bodyMedium)
         } }
         if (day.archivedRecaps.any { it.text.isNotBlank() }) item { Panel {

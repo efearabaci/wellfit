@@ -68,6 +68,7 @@ import java.time.format.DateTimeFormatter
                     Macro("Karbonhidrat", day.carbs, day.goals.carbs, Orange, Modifier.weight(1f))
                     Macro("Yağ", day.fat, day.goals.fat, Lilac, Modifier.weight(1f))
                 }
+                if (day.carbs == null || day.fat == null) Text("Bazı öğünlerde karbonhidrat veya yağ girilmedi; günlük toplamı bilinmiyor.", color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
         item {
@@ -89,14 +90,14 @@ import java.time.format.DateTimeFormatter
         item {
             Panel {
                 if (day.meals.isEmpty()) {
-                    EmptyState("İlk öğününle başla", "Kalorini ve makrolarını sen hesapla,\nburada kolayca bir araya gelsin.", Icons.Outlined.Restaurant)
+                    EmptyState("İlk öğününle başla", "Değerlerini kendin gir veya\nyediklerini AI'a anlat.", Icons.Outlined.Restaurant)
                     if (editable) PrimaryButton("Öğün ekle", Icons.Outlined.Add, onClick = addMeal)
                 } else {
                     day.meals.sortedBy { it.time }.forEachIndexed { index, meal ->
                         if (index > 0) HorizontalDivider(color = Line)
                         Row(Modifier.fillMaxWidth().clickable(enabled = editable) { editMeal(meal) }.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             IconTile(when (meal.category) { "Kahvaltı" -> Icons.Outlined.WbSunny; "Ara öğün" -> Icons.Outlined.LocalCafe; "Akşam" -> Icons.Outlined.Nightlight; else -> Icons.Outlined.Restaurant }, bg = Color(0xFFF0F3EA))
-                            Column(Modifier.weight(1f)) { Text(meal.name, style = MaterialTheme.typography.titleMedium); Text("${meal.category} · ${meal.time}", style = MaterialTheme.typography.bodySmall, color = Muted); Text("P ${number(meal.protein)} · K ${number(meal.carbs)} · Y ${number(meal.fat)} g", style = MaterialTheme.typography.bodySmall, color = Muted) }
+                            Column(Modifier.weight(1f)) { Text(meal.name, style = MaterialTheme.typography.titleMedium); Text("${meal.category} · ${meal.time}", style = MaterialTheme.typography.bodySmall, color = Muted); if (meal.aiSourceText != null) Text("AI destekli · değerler tahmini olabilir", style = MaterialTheme.typography.bodySmall, color = Forest); Text("P ${number(meal.protein)} · K ${macroNumber(meal.carbs)} · Y ${macroNumber(meal.fat)} g", style = MaterialTheme.typography.bodySmall, color = Muted) }
                             Column(horizontalAlignment = Alignment.End) { Text(number(meal.calories), fontWeight = FontWeight.SemiBold); Text("kcal", style = MaterialTheme.typography.bodySmall, color = Muted) }
                         }
                     }

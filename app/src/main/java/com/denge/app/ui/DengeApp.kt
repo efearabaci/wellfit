@@ -84,7 +84,7 @@ val Tabs = listOf(Tab("Bugün", Icons.Outlined.GridView), Tab("Gidişat", Icons.
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     when (tab) {
                         0 -> TodayScreen(s, d, date, busy, onPrevious = { dateString = date.minusDays(1).toString() }, onNext = { if (date < LocalDate.now()) dateString = date.plusDays(1).toString() }, onToday = { dateString = LocalDate.now().toString() },
-                            addMeal = { selectedMealId = null; modal = "meal" }, editMeal = { selectedMealId = it.id; modal = "meal" },
+                            addMeal = { selectedMealId = null; vm.resetAiMeal(); modal = "meal" }, editMeal = { selectedMealId = it.id; modal = "meal" },
                             metrics = { modal = "metrics" }, sync = { vm.syncSteps(date, true) }, note = { modal = "note" },
                             workout = { selectedWorkoutId = null; modal = "workout" }, editWorkout = { selectedWorkoutId = it.id; modal = "workout" },
                             hevy = { vm.hevy(date) }, rest = { vm.rest(date) }, close = { modal = "close" }, reopen = { modal = "reopen" }, memory = { tab = 2 })
@@ -98,7 +98,8 @@ val Tabs = listOf(Tab("Bugün", Icons.Outlined.GridView), Tab("Gidişat", Icons.
                     if (busy) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter), color = Forest, trackColor = Sage)
                 }
                 when (modal) {
-                    "meal" -> MealEditor(selectedMeal, busy, { modal = null }, { vm.meal(date, it) { modal = null } }, { selectedMeal?.let { vm.deleteMeal(date, it.id) { modal = null } } })
+                    "meal" -> MealEditor(selectedMeal, busy, { modal = null }, { vm.meal(date, it) { modal = null } }, { selectedMeal?.let { vm.deleteMeal(date, it.id) { modal = null } } }, onAi = if (selectedMeal == null) ({ modal = "ai-meal" }) else null)
+                    "ai-meal" -> AiMealEditor(vm, date, busy, dismiss = { vm.cancelAiMeal(); modal = null }, manual = { vm.cancelAiMeal(); modal = "meal" }, settings = { vm.cancelAiMeal(); modal = null; tab = 3 }, saved = { modal = null })
                     "metrics" -> MetricsEditor(d, busy, { modal = null }) { steps, weight -> vm.metrics(date, steps, weight) { modal = null } }
                     "note" -> NoteEditor(d.note, busy, { modal = null }) { vm.note(date, it) { modal = null } }
                     "workout" -> WorkoutEditor(selectedWorkout, busy, { modal = null }, { vm.workout(date, it) { modal = null } }, { selectedWorkout?.let { vm.deleteWorkout(date, it.id) { modal = null } } })

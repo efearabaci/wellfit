@@ -23,9 +23,7 @@ class DailyJourneyTest {
         ui.onNodeWithText("Ne yedin?").performTextInput("Tavuk ve pilav")
         ui.onNodeWithText("Kalori · kcal").performTextInput("650")
         ui.onNodeWithText("Protein · g").performTextInput("45")
-        ui.onNodeWithText("Karb. · g").performTextInput("70")
-        ui.onNodeWithText("Yağ · g").performTextInput("18")
-        ui.onNodeWithText("Öğünü kaydet").performClick()
+        ui.onNodeWithText("Öğünü kaydet").performScrollTo().performClick()
         ui.waitUntil(10000) { runBlocking { graph.repo.read().day(LocalDate.now()).meals.size == 1 } }
         ui.onNodeWithTag("today-list").performScrollToNode(hasText("Tavuk ve pilav"))
         ui.onNodeWithText("Tavuk ve pilav").assertIsDisplayed()
@@ -40,5 +38,7 @@ class DailyJourneyTest {
         val day = runBlocking { graph.repo.read().day(LocalDate.now()) }
         assertEquals(650, day.calories); assertTrue(day.recap!!.prompt.contains("Tavuk ve pilav"))
         assertTrue(day.recap.prompt.contains("completeHistory"))
+        assertNull(day.meals.single().carbs); assertNull(day.meals.single().fat)
+        assertTrue(day.recap.prompt.contains("\"carbs\":null"))
     }
 }

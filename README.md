@@ -4,7 +4,7 @@ Kotlin + Jetpack Compose ile geliştirilmiş, Türkçe ve önce çevrimdışı �
 
 ## Kurulum
 
-Yerel kurulum paketi: `dist/Denge-1.1.0.apk`. Derleme çıktıları Git reposuna eklenmez. Paketi `./gradlew assembleRelease` ile üretip `app/build/outputs/apk/release/app-release.apk` konumundan telefona aktararak yükleyebilirsin. Bu paket R8 ile küçültülmüş ve geliştirme anahtarıyla imzalanmış kişisel kurulum sürümüdür; mağaza dağıtımı için özel imzalama anahtarı gerekir.
+Yerel kurulum paketi: `dist/Denge-1.2.0.apk`. Derleme çıktıları Git reposuna eklenmez. Paketi `./gradlew assembleRelease` ile üretip `app/build/outputs/apk/release/app-release.apk` konumundan telefona aktararak yükleyebilirsin. Bu paket R8 ile küçültülmüş ve geliştirme anahtarıyla imzalanmış kişisel kurulum sürümüdür; mağaza dağıtımı için özel imzalama anahtarı gerekir.
 
 Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yapılandırmasını çalıştır. JDK 17 veya 21, Android SDK 36 gerekir. Bilgisayara özel `local.properties` dosyasını kendi SDK yolunla oluştur; dosya sürüm kontrolüne dahil değildir.
 
@@ -18,7 +18,7 @@ Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yap
 ## Kullanım
 
 1. İlk açılışta adını ve kendi planındaki günlük kalori, makro ve adım hedeflerini gir. Başlangıç değerleri kişisel bir beslenme önerisi değildir.
-2. **Bugün** ekranında her öğünü yedikten sonra adını, saatini, kalorisini ve makrolarını ekle. Kayıtlar hemen telefona yazılır. Öğüne dokunarak düzenleyebilir veya silebilirsin.
+2. **Bugün** ekranında her öğünü yedikten sonra adını, saatini, kalorisini ve proteinini ekle. Karbonhidrat ve yağ isteğe bağlıdır; boş alanlar sıfır sayılmaz. İstersen **AI ile anlat** seçeneğini kullan. Kayıtlar hemen telefona yazılır. Öğüne dokunarak düzenleyebilir veya silebilirsin.
 3. Adım/kilo kartına dokunup Huawei Sağlık'taki günlük toplamı ve istersen tartı kaydını gir. Boş adım alanı bilinmeyendir; `0` gerçek sıfır kaydıdır.
 4. Antrenmanını kendin ekle veya **Hevy'den al** düğmesini kullan. Antrenmansız günlerde **Bugün dinleniyorum** seçeneği bulunur.
 5. Son öğününden sonra **Günü kapat**. Gün kendiliğinden kapanmaz. Kapalı gün yeniden açılıp düzenlenebilir; eski AI sonucu arşivlenir.
@@ -50,6 +50,16 @@ Hevy'nin resmi API'si **Hevy Pro** ve kişisel API anahtarı gerektirir. **Ayarl
 **Antrenman geçmişini içe aktar** ile bütün Hevy geçmişini tek seferde aktar. İlerleme sayfa sayfa gösterilir. İstek başındaki ve sonundaki hesap sayısı, alınan benzersiz antrenman sayısıyla eşleşmeden tek bir günlük kayıt bile değiştirilmez. Tekrarlanan aktarım antrenmanları çoğaltmaz; açık günler güncellenir, manuel öğün/not/antrenmanlar korunur. Kapalı günlere ait kayıtlar ve AI kopyaları değiştirilmez; kaç günün korunduğu gösterilir. Kapalı bir günü güncellemek için önce yeniden aç. Hevy'de hiç kayıt bulunmayan tarihler otomatik dinlenme olarak işaretlenmez. Kaynaktan silinmiş geçmiş kayıtlar başka günlerden otomatik temizlenmez; bu işlem tam bir silme aynalaması değildir.
 
 Sonraki antrenmanlarında Bugün ekranındaki **Hevy'den al** düğmesini de kullanabilirsin. Sayfalanmış geçmişin tüm sayfaları okunur; seçili günün kaydedilmiş saat dilimine göre o gün başlayan antrenmanlar alınır. Başlık, süre, hareketler, setler, tekrarlar, ağırlıklar, mesafeler, süreler ve kaynak JSON saklanır. Ham API verisi AI hafızasına dahil edilir. Aynı kaynak kimliğiyle eşitleme tekrarlandığında kayıt çoğalmaz; yerel manuel kayıtların korunur. Bir sayfa başarısız olursa kısmi veri kaydedilmez. Güvenlik sınırı 500 sayfadır; sınır aşılırsa kayıtlar kesilerek aktarılmaz.
+
+## AI ile öğün ekleme · 1.2.0
+
+**Bugün → Öğün ekle → AI ile anlat** yolunu izle. Örneğin “Öğlen 150 g tavuk, bir tabak pilav ve bir bardak ayran yedim” yaz. AI aynı öğündeki yiyecekleri birlikte, farklı öğünleri ayrı kayıtlar halinde hazırlar. Verdiğin kalori/makroları kullanması; diğer değerleri yaklaşık hesaplaması ve porsiyon varsayımlarını açıklaması istenir. Miktar veya yiyecek anlaşılamazsa netleştirme ister.
+
+Önizlemede her kaydı düzenleyebilir veya çıkarabilirsin. **Öğünleri günlüğe ekle** düğmesiyle tüm kayıtlar tek işlemde saklanır. Hazırlama, tekrar deneme veya önizlemeyi kapatma günlüğe kendiliğinden kayıt eklemez. Eksik/yarım/geçersiz AI yanıtları kısmen kaydedilmez. İsteği iptal edebilirsin; editördeki metin ve sonuçlar ekran dönüşünde korunur. Android'in kaydettiği ekran durumu üzerinden işlem yeniden oluşturulduğunda taslak geri yüklenir; ağ isteği kendiliğinden tekrar ücretlendirilmez.
+
+Ayarlar'a kaydedilmiş DeepSeek anahtarı gerekir. Bu özellik günlük AI değerlendirme ayarından bağımsız olarak yalnızca **Öğünleri hazırla** düğmesine dokunduğunda çalışır. DeepSeek'e sadece yemek metni ve öğün/saat seçimi gider; kayıt geçmişi gitmez. API kullanımı kendi hesabından ücretlendirilir. Kaydedilen öğünler kaynak metni ve AI varsayımlarını da taşır; yedeklere ve gün sonu hafızasına dahil edilir. Tahmini değerler arayüzde belirtilir.
+
+**İsteğe bağlı makrolar:** karbonhidrat ve yağ boş bırakılabilir. Bunlar JSON'da `null`, arayüzde `—` olarak korunur. Herhangi bir öğünde ilgili makro eksikse o makronun günlük toplamı bilinmiyor olur; kalori/protein hesapları devam eder. Karbonhidrat/yağ dönem ortalamalarına yalnızca ilgili makronun tüm öğünlerde bilindiği kapalı günler katılır; kapsanan gün sayısı gösterilir. Girilen gerçek `0` korunur. Önceki sürümlerin tam makrolu kayıtları değişmez.
 
 ## İstatistikler · 1.1.0
 
@@ -91,12 +101,15 @@ Otomatik testler ham geçmişin ve Hevy detaylarının bağlamda korunmasını, 
 ## Resmi kaynaklar
 
 - [DeepSeek API](https://api-docs.deepseek.com/)
+- [DeepSeek JSON çıktısı](https://api-docs.deepseek.com/guides/json_mode/)
 - [Hevy Public API](https://api.hevyapp.com/docs/)
 - [Health Connect başlangıç rehberi](https://developer.android.com/health-and-fitness/health-connect/get-started)
 - [Health Connect veri okuma](https://developer.android.com/health-and-fitness/health-connect/read-data)
 - [Huawei Health Kit](https://developer.huawei.com/consumer/en/hms/huaweihealth/)
 
 ## Ekran görüntüleri ve test kaydı
+
+1.2.0: [AI ile öğün önizlemesi](screenshots/meal-preview/09-ai-meal-review.png). Görüntü otomatik testte hazırlanan geçici sonuçları gösterir; gerçek hesap verisi veya canlı model çıktısı değildir.
 
 1.1.0 cihaz testlerinden: [Hareket istatistikleri](screenshots/statistics-preview/06-statistics-activity.png), [Antrenman takvimi](screenshots/statistics-preview/07-training-calendar.png), [Hevy bağlantısı](screenshots/statistics-preview/08-hevy-connection.png). İstatistik görüntülerindeki iki antrenman geçici test verisidir; uygulamaya örnek veri gömülmez.
 

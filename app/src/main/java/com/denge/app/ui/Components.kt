@@ -22,6 +22,7 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 fun number(n: Number): String = NumberFormat.getNumberInstance(Locale.forLanguageTag("tr-TR")).apply { maximumFractionDigits = 1 }.format(n)
+fun macroNumber(n: Double?): String = n?.let { number(it) } ?: "—"
 @Composable fun Panel(modifier: Modifier = Modifier, color: Color = Color.White, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(color).border(1.dp, Line.copy(alpha = .65f), RoundedCornerShape(26.dp)).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp), content = content)
 }
@@ -49,11 +50,11 @@ fun number(n: Number): String = NumberFormat.getNumberInstance(Locale.forLanguag
         icon?.let { Icon(it, null, Modifier.size(19.dp)); Spacer(Modifier.width(9.dp)) }; Text(text)
     }
 }
-@Composable fun Macro(label: String, current: Double, goal: Int, color: Color, modifier: Modifier = Modifier) {
+@Composable fun Macro(label: String, current: Double?, goal: Int, color: Color, modifier: Modifier = Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) { Box(Modifier.size(6.dp).background(color, CircleShape)); Spacer(Modifier.width(5.dp)); Text(label, style = MaterialTheme.typography.bodySmall, color = Muted) }
-        Text("${number(current)} g", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-        LinearProgressIndicator(progress = { if (goal > 0) (current / goal).toFloat().coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth().height(5.dp).clip(CircleShape), color = color, trackColor = color.copy(alpha = .15f), drawStopIndicator = {})
+        Text("${macroNumber(current)} g", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+        LinearProgressIndicator(progress = { if (goal > 0 && current != null) (current / goal).toFloat().coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth().height(5.dp).clip(CircleShape), color = color, trackColor = color.copy(alpha = .15f), drawStopIndicator = {})
         Text("/ $goal g", style = MaterialTheme.typography.bodySmall, color = Muted)
     }
 }

@@ -37,7 +37,7 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
         }
     }
 }
-@Composable fun MealEditor(meal: Meal?, busy: Boolean, dismiss: () -> Unit, save: (Meal) -> Unit, delete: () -> Unit) {
+@Composable fun MealEditor(meal: Meal?, busy: Boolean, dismiss: () -> Unit, save: (Meal) -> Unit, delete: () -> Unit, onAi: (() -> Unit)? = null) {
     var name by rememberSaveable(meal?.id) { mutableStateOf(meal?.name.orEmpty()) }
     var category by rememberSaveable(meal?.id) { mutableStateOf(meal?.category ?: "Öğle") }
     var time by rememberSaveable(meal?.id) { mutableStateOf(meal?.time ?: LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))) }
@@ -49,6 +49,11 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
     var confirmDelete by remember { mutableStateOf(false) }
     Editor(if (meal == null) "Yeni öğün" else "Öğünü düzenle", busy, dismiss) {
         Text("Hesapladığın değerleri ekle. Hepsi bu.", color = Muted)
+        onAi?.let { TextButton(it, enabled = !busy) { Icon(Icons.Outlined.AutoAwesome, null); Spacer(Modifier.width(8.dp)); Text("AI ile anlat") } }
+        meal?.aiSourceText?.let {
+            Tag("AI destekli kayıt")
+            Text(meal.aiNote ?: "Besin değerleri tahmini olabilir; kontrol edip düzenleyebilirsin.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
         FormField(name, { name = it }, "Ne yedin?")
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("Kahvaltı", "Öğle", "Akşam", "Ara öğün").forEach { FilterChip(selected = category == it, onClick = { category = it }, label = { Text(it) }) }
@@ -62,14 +67,14 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
             FormField(carbs, { carbs = it }, "Karb. · g", true, Modifier.weight(1f), max = 7)
             FormField(fat, { fat = it }, "Yağ · g", true, Modifier.weight(1f), max = 7)
         }
-        Text("Makroları gram olarak gir. Ondalık değerlerde virgül veya nokta kullanabilirsin.", style = MaterialTheme.typography.bodySmall, color = Muted)
+        Text("Karbonhidrat ve yağ isteğe bağlı. Boş bıraktıkların bilinmiyor olarak saklanır; sıfır sayılmaz. Gram için virgül veya nokta kullanabilirsin.", style = MaterialTheme.typography.bodySmall, color = Muted)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         PrimaryButton("Öğünü kaydet", Icons.Outlined.Check, !busy) {
             runCatching {
                 val c = calories.toIntOrNull() ?: error("Kaloriyi tam sayı olarak gir.")
                 val p = protein.decimal() ?: error("Protein miktarını gir.")
-                val k = carbs.decimal() ?: error("Karbonhidrat miktarını gir.")
-                val f = fat.decimal() ?: error("Yağ miktarını gir.")
+                val k = if (carbs.isBlank()) null else carbs.decimal() ?: error("Karbonhidrat değerini kontrol et.")
+                val f = if (fat.isBlank()) null else fat.decimal() ?: error("Yağ değerini kontrol et.")
                 val parsed = LocalTime.parse(time).format(DateTimeFormatter.ofPattern("HH:mm"))
                 (meal?.copy(name = name.trim(), category = category, time = parsed, calories = c, protein = p, carbs = k, fat = f)
                     ?: Meal(name = name.trim(), category = category, time = parsed, calories = c, protein = p, carbs = k, fat = f)).also { it.validate() }

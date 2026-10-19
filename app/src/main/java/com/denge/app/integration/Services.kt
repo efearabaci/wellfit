@@ -8,6 +8,7 @@ import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import com.denge.app.domain.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import okhttp3.*
@@ -16,6 +17,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.time.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class ApiException(val status: Int, message: String) : IOException(message)
 class RemoteServices(
@@ -48,6 +51,54 @@ class RemoteServices(
         require(choice["finish_reason"]?.jsonPrimitive?.content == "stop") { "AI yanıtı tamamlanmadı. Yeniden deneyebilirsin." }
         choice["message"]?.jsonObject?.get("content")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
             ?: throw IOException("AI boş bir özet döndürdü.")
+    }
+    suspend fun understandMeals(key: String, model: String, text: String, category: String, time: String): Pair<List<Meal>, String> {
+        require(text.isNotBlank() && text.length <= 4000) { "Yediklerini 1–4000 karakter arasında anlat." }
+        require(category in listOf("Kahvaltı", "Öğle", "Akşam", "Ara öğün")); LocalTime.parse(time)
+        val body = buildJsonObject {
+            put("model", model); put("stream", false); put("max_tokens", 6000)
+            put("thinking", buildJsonObject { put("type", "disabled") })
+            put("response_format", buildJsonObject { put("type", "json_object") })
+            put("messages", buildJsonArray {
+                add(buildJsonObject { put("role", "system"); put("content", MealUnderstanding.SYSTEM) })
+                add(buildJsonObject { put("role", "user"); put("content", buildJsonObject {
+                    put("text", text); put("defaultCategory", category); put("defaultTime", time)
+                }.toString()) })
+            })
+        }
+        val request = Request.Builder().url(deepseekUrl).header("Authorization", "Bearer $key")
+            .post(body.toString().toRequestBody("application/json".toMediaType())).build()
+        // A cancelled editor cancels its HTTP call, including while waiting for the model.
+        val result = suspendCancellableCoroutine<JsonObject> { continuation ->
+            val call = client.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) { if (continuation.isActive) continuation.resumeWithException(IOException("AI bağlantısı kurulamadı. Metnin korunuyor; yeniden deneyebilirsin.")) }
+                override fun onResponse(call: Call, response: Response) {
+                    val parsed = runCatching { response.use {
+                        if (!it.isSuccessful) throw ApiException(it.code, when (it.code) {
+                            401, 403 -> "DeepSeek API anahtarını Ayarlar'dan kontrol et."
+                            402 -> "DeepSeek API bakiyesi yetersiz."
+                            429 -> "İstek sınırına ulaşıldı. Biraz sonra tekrar dene."
+                            else -> "AI servisi yanıt veremedi (HTTP ${it.code}). Yeniden deneyebilirsin."
+                        })
+                        JsonCodec.parseToJsonElement(it.body?.string() ?: error("empty")).jsonObject
+                    } }
+                    if (continuation.isActive) parsed.fold({ continuation.resume(it) }, { continuation.resumeWithException(if (it is ApiException) it else IOException("AI yanıtı okunamadı. Yeniden dene.")) })
+                }
+            })
+        }
+        return withContext(Dispatchers.Default) {
+            try {
+                val choice = result.getValue("choices").jsonArray.first().jsonObject
+                require(choice["finish_reason"]?.jsonPrimitive?.content == "stop")
+                val content = choice.getValue("message").jsonObject.getValue("content").jsonPrimitive.content
+                val understood = JsonCodec.decodeFromString<UnderstoodMeals>(content)
+                val meals = understood.toMeals(text)
+                require(meals.isNotEmpty() || understood.message.isNotBlank())
+                meals to understood.message
+            } catch (_: Exception) { throw IOException("AI yanıtı tamamlanmadı veya öğün değerleri geçersiz. Kayıt eklenmedi; yeniden dene.") }
+        }
     }
     suspend fun verifyHevy(key: String): Int = withContext(Dispatchers.IO) {
         require(key.isNotBlank() && !key.contains('\n') && !key.contains('\r')) { "Geçerli bir Hevy API anahtarı gir." }

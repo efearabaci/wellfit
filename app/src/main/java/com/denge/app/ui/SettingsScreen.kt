@@ -101,7 +101,7 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
                 Column(Modifier.weight(1f)) { Text("AI ile günlük değerlendirme", style = MaterialTheme.typography.titleMedium); Text("Günü kapatırken profil notların ve o tarihe kadar tüm kayıtların DeepSeek'e gönderilir.", style = MaterialTheme.typography.bodySmall, color = Muted) }
                 Switch(consent, { consent = it })
             }
-            Text("Ücretlendirme kendi DeepSeek hesabından yapılır. Anahtarlar yedeklere eklenmez.", style = MaterialTheme.typography.bodySmall, color = Muted)
+            Text("Öğün eklerken AI ile hazırla seçeneği bu anahtarı kullanır; günlük değerlendirme ayarından bağımsız olarak isteğinle çalışır. Ücretlendirme kendi DeepSeek hesabından yapılır. Anahtarlar yedeklere eklenmez.", style = MaterialTheme.typography.bodySmall, color = Muted)
             if (hasDeepseek) TextButton({ vm.removeKey("deepseek") }, enabled = !busy) { Text("DeepSeek anahtarını kaldır") }
         } }
         item { Panel {
@@ -146,7 +146,7 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
             PrimaryButton("JSON yedeği kaydet", Icons.Outlined.FileDownload, !busy, onExport)
             OutlinedButton(onImport, Modifier.fillMaxWidth(), enabled = !busy) { Text("Yedekten içe aktar") }
         } }
-        item { TextButton(onPrivacy, Modifier.fillMaxWidth()) { Text("Gizlilik ve veri kullanımı") }; Text("DENGE  /  1.1.0\nKüçük adımlar. Kalıcı alışkanlıklar.", Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Muted, style = MaterialTheme.typography.bodySmall) }
+        item { TextButton(onPrivacy, Modifier.fillMaxWidth()) { Text("Gizlilik ve veri kullanımı") }; Text("DENGE  /  1.2.0\nKüçük adımlar. Kalıcı alışkanlıklar.", Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Muted, style = MaterialTheme.typography.bodySmall) }
     }
     if (confirmHistoryImport) AlertDialog(onDismissRequest = { confirmHistoryImport = false }, title = { Text("Hevy geçmişini içe aktar") }, text = { Text("Tüm antrenman sayfaları alınacak. Eksik günler eklenecek, açık günlerdeki Hevy kayıtları güncellenecek. Manuel kayıtların ve kapalı günlerin korunacak. Aynı antrenman tekrar eklenmeyecek.") }, confirmButton = { Button(onClick = { confirmHistoryImport = false; vm.importHevyHistory() }, enabled = !busy) { Text("Geçmişi içe aktar") } }, dismissButton = { TextButton({ confirmHistoryImport = false }) { Text("Vazgeç") } })
 }
