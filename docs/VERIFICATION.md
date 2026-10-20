@@ -1,6 +1,18 @@
 # Doğrulama · 1.2.0 · 19 Ekim 2026
 
 
+## Hafıza tasarım güncellemesi · 20 Ekim 2026
+
+- Gün/hafta/ay değerlendirmeleri ve sonraki gün önerileri ayrı renk alanlarına alındı. Tarih çipleri yerine değerlendirme geçmişi menüsü, üstte dışa aktarma eylemi, ayrı kayıt/arşiv/not bölümleri ve yeni simgeler kullanılıyor. Tanıtım açıklaması ve genel sayaç kartı kaldırıldı.
+- AI metni görünüm için bölümlenir; saklanan değerlendirme ve gönderim kopyası değiştirilmez. Markdown başlıkları, kalın metin, paragraflar, numaralı/maddeli öneriler ve başlıksız eski çıktılar okunur. Eksik ölçümlerden sahte sıfır üretilmez.
+- Bağlantı/izin, sırada, hazırlanıyor, başarısız, eksik değerlendirme ve tamamlanmamış gün durumlarının ayrı eylemleri var. Hazır kayıtlar bağlantı/izin kapalı olsa da okunur. Önceki değerlendirmeler açılabilir; günün kaydına ve profil notları için Ayarlar'a dönülebilir.
+- `assembleDebug`, `assembleDebugAndroidTest`, `testDebugUnitTest`, `lintDebug` başarılı. 63 JVM testi: 0 hata; 7 yeni metin biçimleme testi dahil. Lint: 0 hata, mevcut 20 uyarı.
+- API 37 test emülatöründe 12 cihaz testi başarılı: Hafıza ekranı/geçmiş/arşiv/boş durum/gönderim kopyası/ayarlar, bağlantı ve yeniden deneme düğmeleri, günlük öğün/kapatma akışı ve depo kalıcılığı. Örnek AI yanıtları geçici test verisidir; testler canlı DeepSeek isteği başlatmaz. Test kayıtları sonrasında geri alınır.
+- Son okuma, arşiv, tarih seçimi ve Activity yeniden oluşturma akışı normal ve %130 yazı boyutunda ayrıca doğrulandı. Cihazın yazı ölçeği eski değerine döndürüldü.
+- `assembleRelease` başarılı. Kurulum paketi `dist/Wellfit-1.2.1.apk`; APK v2 imzası doğrulandı, SHA-256 kaydı `dist/SHA256SUMS` içinde.
+- Önizlemeler `screenshots/memory-redesign/` ve `large-type/` altındadır. Tasarım notları `docs/WELLFIT_MEMORY_DESIGN.md` içinde.
+
+
 ## Gidişat tasarım güncellemesi · 20 Ekim 2026
 
 - Hafta/ay seçimi görünüm menüsüne alındı. Genel/beslenme/hareket/kilo sekmeleri yerine tek sayfada antrenman, adım, beslenme, kilo ve koşullu karşılaştırma bölümleri kullanılıyor.

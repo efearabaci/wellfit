@@ -32,7 +32,7 @@ import java.util.Locale
 
 val Turkish = Locale.forLanguageTag("tr-TR")
 data class Tab(val title: String, val icon: ImageVector)
-val Tabs = listOf(Tab("Bugün", WellfitIcons.Today), Tab("Gidişat", WellfitIcons.Progress), Tab("Hafıza", WellfitIcons.Memory))
+val Tabs = listOf(Tab("Bugün", WellfitIcons.Today), Tab("Gidişat", WellfitIcons.Progress), Tab("Hafıza", WellfitIcons.Library))
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun DengeApp(vm: DengeViewModel = viewModel()) {
@@ -146,7 +146,7 @@ val Tabs = listOf(Tab("Bugün", WellfitIcons.Today), Tab("Gidişat", WellfitIcon
                             hevy = { vm.hevy(date) }, rest = { vm.rest(date) }, close = { modal = "close" }, reopen = { modal = "reopen" }, memory = { tab = 2 },
                             fabClearance = canAddMeal)
                         1 -> ProgressScreen(s) { dateString = it; tab = 0 }
-                        else -> MemoryScreen(s, date, busy, { vm.retry(date) }, { modal = "prompt" }, { markdown.launch("wellfit-hafiza-${LocalDate.now()}.md") }, { dateString = it })
+                        else -> MemoryScreen(s, date, busy, { vm.retry(date) }, { modal = "prompt" }, { markdown.launch("wellfit-hafiza-${LocalDate.now()}.md") }, { dateString = it }, hasAiKey = vm.graph.secrets.has("deepseek"), openDay = { tab = 0 }, settings = { settingsOpen = true })
                     }
                     if (busy) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter), color = Forest, trackColor = Sage)
                 }

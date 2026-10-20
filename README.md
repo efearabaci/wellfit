@@ -77,7 +77,13 @@ Yerleşim, etkileşimler ve veri gösterim kuralları [tasarım notunda](docs/WE
 
 Hevy bağlantı/aktarım zamanları kalıcıdır; gerçek bağlantı durumu anahtarın varlığı ve son doğrulama zamanıyla birlikte gösterilir. Yeni alanlar varsayılan değerlere sahiptir; 1.0.0 kayıt ve yedekleri okunmaya devam eder.
 
-## Hafıza ve veri koruması
+## Hafıza
+
+Tarih alanından geçmiş değerlendirmeleri seç. Hazır AI çıktıları gün, hafta, ay ve sonraki gün bölümlerinde okunur. Günün kayıtları, arşivlenmiş değerlendirmeler ve AI için kişisel notların ayrı alanlardadır. Başlıktaki dışa aktarma simgesi tüm hafızayı Markdown dosyasına kaydeder; **AI'ya gönderilen veri** saklanmış istek kopyasını açar. Bağlantı/izin gerekiyorsa Ayarlar'a geçilir; hata halinde yeniden denenebilir. Saklanmış değerlendirmeler çevrimdışı da okunur.
+
+Yerleşim ve durumlar [Hafıza tasarım notunda](docs/WELLFIT_MEMORY_DESIGN.md).
+
+## Veri koruması
 
 - Room / SQLite WAL ile sürümlenmiş bir günlük belgesi tutulur. Değişiklikler mutex ve veritabanı transaction'ı içinde uygulanır; eşzamanlı kayıtlar birbirini ezmez. Destructive migration yoktur; ilk şema `app/schemas/` altında bulunur.
 - Her başarılı değişiklikten sonra uygulamanın özel alanına atomik bir JSON kurtarma kopyası yazılır. Bu, telefon kaybına karşı dış yedek değildir.
