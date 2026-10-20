@@ -32,7 +32,7 @@ import java.util.Locale
 
 val Turkish = Locale.forLanguageTag("tr-TR")
 data class Tab(val title: String, val icon: ImageVector)
-val Tabs = listOf(Tab("Bugün", WellfitIcons.Today), Tab("Gidişat", WellfitIcons.Chart), Tab("Hafıza", WellfitIcons.Memory))
+val Tabs = listOf(Tab("Bugün", WellfitIcons.Today), Tab("Gidişat", WellfitIcons.Progress), Tab("Hafıza", WellfitIcons.Memory))
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun DengeApp(vm: DengeViewModel = viewModel()) {

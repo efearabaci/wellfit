@@ -1,6 +1,18 @@
 # Doğrulama · 1.2.0 · 19 Ekim 2026
 
 
+## Gidişat tasarım güncellemesi · 20 Ekim 2026
+
+- Hafta/ay seçimi görünüm menüsüne alındı. Genel/beslenme/hareket/kilo sekmeleri yerine tek sayfada antrenman, adım, beslenme, kilo ve koşullu karşılaştırma bölümleri kullanılıyor.
+- Açıklama paragrafları, kayıt devamlılığı ve gün kapatma sayıları arayüzden kaldırıldı. Verisi olmayan bölümler gizleniyor; iki dönemde de ölçüm yoksa karşılaştırma oluşturulmuyor. Tek ölçümde boş grafik veya değişim gösterilmiyor.
+- Grafikler tarih seçimini ve günlük kaydına geçişi destekliyor; kilo grafiği gerçek tarih aralıklarını koruyor. Antrenman gün/seans/süre değerleri takvimle birlikte gösteriliyor. Yeni dönem, antrenman, beslenme, kilo ve karşılaştırma simgeleri eklendi.
+- `assembleDebug`, `assembleDebugAndroidTest`, `testDebugUnitTest`, `lintDebug` başarılı. 54 birim testi: 0 hata. Lint: 0 hata, mevcut 20 uyarı.
+- API 37 emülatöründe son 8 arayüz testi başarılı: tüm bölümler, hafta/ay gezinmesi, takvimden günlük kayda geçiş, boş dönem, eksik makrolar, tek tartım, gerçek sıfır adım, geçerli karşılaştırmalar ve günlük öğün/kapatma akışı. Testler önceki kayıtları geri yüklüyor.
+- Gidişat akışı normal ve %130 yazı boyutunda ayrıca doğrulandı. Grafik ekseni genişliği yazı ölçeğiyle büyür; eksen sayılarının tek satıra sığması cihaz testinde kontrol ediliyor. Yazı ölçeği eski değerine geri alındı.
+- `assembleRelease` başarılı. Güncel küçültülmüş paket `dist/Wellfit-1.2.0.apk`; APK v2 imzası doğrulandı, SHA-256 kaydı `dist/SHA256SUMS` içinde.
+- Güncel görseller `screenshots/progress-redesign/` altında; tamamı geçici test kayıtlarıyla üretildi. Tasarım notları `docs/WELLFIT_PROGRESS_DESIGN.md` içinde.
+
+
 ## Bugün tasarım güncellemesi · 20 Ekim 2026
 
 - Tarih, kalori, makrolar, adım ve kilo tek bir adaçayı özet alanına alındı. Öğünler sıcak taş, antrenmanlar mavi-gri zeminle ayrıldı; bölüm araları, iç boşluklar, yazı hiyerarşisi ve eylemler yenilendi.

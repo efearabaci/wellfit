@@ -24,7 +24,7 @@ Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yap
 3. Adım/kilo kartına dokunup Huawei Sağlık'taki günlük toplamı ve istersen tartı kaydını gir. Boş adım alanı bilinmeyendir; `0` gerçek sıfır kaydıdır.
 4. Antrenmanını kendin ekle veya **Hevy'den al** düğmesini kullan. Antrenmansız günlerde **Bugün dinleniyorum** seçeneği bulunur.
 5. Son öğününden sonra **Günü kapat**. Gün kendiliğinden kapanmaz. Kapalı gün yeniden açılıp düzenlenebilir; eski AI sonucu arşivlenir.
-6. **Gidişat** ekranında gerçek takvim haftaları ve aylar arasında gezin. Genel, Beslenme, Hareket ve Kilo bölümlerinden istatistiklerini incele. Takvimde bir güne dokunarak o günün kayıtlarını aç. **Hafıza** ekranında AI değerlendirmelerini gör.
+6. **Gidişat** ekranında gerçek takvim haftaları ve aylar arasında gezin. Hafta/ay görünümünü sağ üstten seç; antrenman, adım, beslenme ve kilo bölümlerini aynı sayfada incele. Takvimde bir güne dokunarak o günün kayıtlarını aç. **Hafıza** ekranında AI değerlendirmelerini gör.
 7. **Ayarlar → JSON yedeği kaydet** ile düzenli dış yedek al. **Hafıza** ekranından okunabilir Markdown çıktısı da alabilirsin. Ayarlar alt sekmede değil, üst çubuğun sağındaki ayar simgesindedir.
 
 ## Bağlantılar
@@ -63,15 +63,17 @@ Ayarlar'a kaydedilmiş DeepSeek anahtarı gerekir. Bu özellik günlük AI değe
 
 **İsteğe bağlı makrolar:** karbonhidrat ve yağ boş bırakılabilir. Bunlar JSON'da `null`, arayüzde `—` olarak korunur. Herhangi bir öğünde ilgili makro eksikse o makronun günlük toplamı bilinmiyor olur; kalori/protein hesapları devam eder. Karbonhidrat/yağ dönem ortalamalarına yalnızca ilgili makronun tüm öğünlerde bilindiği kapalı günler katılır; kapsanan gün sayısı gösterilir. Girilen gerçek `0` korunur. Önceki sürümlerin tam makrolu kayıtları değişmez.
 
-## İstatistikler · 1.1.0
+## Gidişat
 
-- **Gerçek hafta / ay seçimi:** Pazartesi başlayan haftalar, ayın tamamını gösteren takvim, önceki/sonraki dönem gezinmesi; gelecek dönemlere geçiş yok.
-- **Antrenman takvimi:** antrenman, açıkça bildirilen dinlenme, bilinmeyen ve gelecek günler ayrı; tarih seçimi günlük kaydını açar. Bir günde iki seans, bir antrenman günü ve iki seans sayılır.
-- **Genel:** antrenman gün ve seans sayısı, toplam süre, kalori/adım ortalamaları, kayıt devamlılığı, kişisel hedeflere ulaşma ve önceki dönemle ortalama farkları. Karşılaştırmaların kayıt kapsamı ayrıca gösterilir.
-- **Beslenme:** enerji toplamı/ortalaması, günlük enerji grafiği, protein/karbonhidrat/yağ ortalamaları, öğün sayısı ve öğün türü dağılımı. Kalori hedefine yakınlık o günkü hedefin ±%10 aralığıyla açıkça tanımlanır.
-- **Hareket:** antrenman günü/seansı/süresi, ortalama seans, haftanın hangi günlerinde spor yaptığın, dinlenme ve bilinmeyen gün sayısı, toplam/ortalama/en yüksek adım ve günlük adım grafiği. Kas veya egzersiz hacmi analizi eklenmez.
-- **Kilo:** ilk-son ölçüm farkı, dönem ortalaması, min/maks, hedef kilo, tarih aralıklarını koruyan ölçüm grafiği ve haftalık tartı ortalamaları. Tek tartımdan kilo değişimi üretilmez.
-- **Doğru paydalar:** beslenme ortalamaları kapalı günlerden, adım ortalamaları adım girilmiş günlerden hesaplanır. Bilinmeyen günler sıfır sayılmaz; girilmiş `0` ise gerçek bir ölçümdür. Geçmiş günlerin kendi hedefleri kullanılır. Hedefi 0 olan protein günleri başarı paydasına katılmaz.
+- **Dönem:** Sağ üstteki tarih simgesinden hafta veya ay görünümünü seç. Tarih satırındaki oklarla dönemler arasında gezin; gelecek dönemlere geçilmez.
+- **Antrenman:** Gün, seans ve süre takvimle birlikte gösterilir. Antrenman, işaretlenen dinlenme, kayıtsız ve gelecek günler ayrılır. Takvimden günlük kaydı açılır.
+- **Adımlar:** Günlük ortalama, günlük grafik, hedefe ulaşılan gün sayısı ve toplam adım aynı bölümde yer alır.
+- **Beslenme:** Kalori grafiği, tamamlanan günlerin kalori/makro ortalamaları, kişisel hedefler ve açılabilir öğün dağılımı.
+- **Kilo:** Son ölçüm, ilk-son farkı, gerçek tarih aralıklarıyla ölçüm grafiği, hedef kilo ve açılabilir ölçüm listesi.
+- **Karşılaştırma:** Yalnızca her iki dönemde de ölçümü bulunan kalori/adım/kilo ortalamaları karşılaştırılır. Her ortalamanın kayıt sayısı görünür.
+- **Eksik veri:** Boş bölümler ve hesaplanamayan karşılaştırmalar gösterilmez. Gerçek sıfır korunur; eksik makrolardan sıfır, tek tartımdan değişim üretilmez. Beslenme ortalamaları tamamlanan günlük kayıtlardan hesaplanır; geçmiş günlerin hedefleri kullanılır.
+
+Yerleşim, etkileşimler ve veri gösterim kuralları [tasarım notunda](docs/WELLFIT_PROGRESS_DESIGN.md).
 
 Hevy bağlantı/aktarım zamanları kalıcıdır; gerçek bağlantı durumu anahtarın varlığı ve son doğrulama zamanıyla birlikte gösterilir. Yeni alanlar varsayılan değerlere sahiptir; 1.0.0 kayıt ve yedekleri okunmaya devam eder.
 

@@ -23,52 +23,44 @@ class StatisticsJourneyTest {
         ui.waitUntil(10000) { ui.onAllNodesWithTag("today-summary").fetchSemanticsNodes().isNotEmpty() }
     }
     @After fun restore() { if (::original.isInitialized) runBlocking { graph.repo.update { original } } }
-    private fun screenshot(name: String) {
-        val bitmap = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
-        val folder = java.io.File(ui.activity.getExternalFilesDir(null), "statistics-preview").apply { mkdirs() }
-        java.io.File(folder, name).outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
+    private fun month() {
+        ui.onNodeWithTag("period-picker").performClick()
+        ui.onNodeWithText("Ay görünümü").performClick()
     }
     @Test fun monthCalendarOpensTrainingDayAndSessionsRemainSeparateFromAttendance() {
         ui.onNodeWithText("Gidişat").performClick()
-        ui.onNodeWithText("Aylık").performClick()
-        ui.onNodeWithText("Hareket").performClick()
-        ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("2 antrenman kaydı"))
-        ui.onNodeWithText("2 antrenman kaydı").assertIsDisplayed()
-        ui.onNodeWithText("100 dk").assertIsDisplayed()
-        ui.onNodeWithTag("statistics-list").performScrollToIndex(0)
-        screenshot("06-statistics-activity.png")
-        ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("Antrenman takvimin"))
+        month()
+        ui.onNodeWithTag("statistics-list").performScrollToNode(hasTestTag("progress-training"))
+        ui.onNodeWithText("Seans").assertIsDisplayed()
+        ui.onNodeWithText("100").assertIsDisplayed()
         val label = date.format(DateTimeFormatter.ofPattern("d MMMM EEEE", Locale.forLanguageTag("tr-TR"))) + ", Antrenman"
-        ui.onNodeWithContentDescription(label).performScrollTo().assertIsDisplayed()
-        screenshot("07-training-calendar.png")
-        ui.onNodeWithContentDescription(label).performClick()
+        ui.onNodeWithContentDescription(label).performScrollTo().assertIsDisplayed().performClick()
         ui.waitUntil(10000) { ui.onAllNodesWithTag("today-list").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithTag("today-list").performScrollToNode(hasText("Sabah antrenmanı"))
         ui.onNodeWithText("Sabah antrenmanı").assertIsDisplayed()
         ui.onNodeWithText("Akşam antrenmanı").assertIsDisplayed()
     }
-    @Test fun periodNavigationStopsAtCurrentMonthAndAllStatisticSectionsAreReachable() {
+    @Test fun periodNavigationStopsAtCurrentMonthAndEmptyMetricsAreOmitted() {
         ui.onNodeWithText("Gidişat").performClick()
-        ui.onNodeWithText("Aylık").performClick()
+        month()
         ui.onNodeWithContentDescription("Sonraki dönem").assertIsNotEnabled()
         ui.onNodeWithContentDescription("Önceki dönem").performClick()
+        ui.onNodeWithTag("progress-empty").assertIsDisplayed()
+        ui.onNodeWithTag("progress-comparison").assertDoesNotExist()
         ui.onNodeWithContentDescription("Sonraki dönem").assertIsEnabled().performClick()
         ui.onNodeWithContentDescription("Sonraki dönem").assertIsNotEnabled()
-        ui.onNodeWithText("Beslenme").performClick()
-        ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("Makroların"))
-        ui.onNodeWithText("Makroların").assertIsDisplayed()
-        ui.onNodeWithTag("statistics-list").performScrollToIndex(0)
-        ui.onNodeWithText("Kilo").performClick()
-        ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("Kilo eğrin"))
-        ui.onNodeWithText("Kilo eğrin").assertIsDisplayed()
+        ui.onNodeWithTag("progress-training").assertExists()
+        ui.onNodeWithTag("progress-nutrition").assertDoesNotExist()
+        ui.onNodeWithTag("progress-steps").assertDoesNotExist()
+        ui.onNodeWithTag("progress-weight").assertDoesNotExist()
+        ui.onNodeWithText("Kayıt devamlılığın").assertDoesNotExist()
+        ui.onNodeWithText("Genel").assertDoesNotExist()
     }
     @Test fun hevyConnectionRequiresAnExplicitKeyAndNeverUsesAChatCredential() {
         if (graph.secrets.has("hevy")) return
         ui.onNodeWithContentDescription("Ayarlar").performClick()
         ui.onNodeWithTag("settings-list").performScrollToNode(hasText("Bağlan ve doğrula"))
         ui.onNodeWithText("Bağlan ve doğrula").assertIsNotEnabled()
-        screenshot("08-hevy-connection.png")
         ui.onNodeWithText("Hevy API anahtarı").performTextInput("local-test-value")
         ui.onNodeWithText("Bağlan ve doğrula").assertIsEnabled()
     }
