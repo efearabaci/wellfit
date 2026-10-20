@@ -3,23 +3,26 @@ package com.denge.app.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.Locale
-import kotlin.math.roundToInt
 
 fun number(n: Number): String = NumberFormat.getNumberInstance(Locale.forLanguageTag("tr-TR")).apply { maximumFractionDigits = 1 }.format(n)
 fun macroNumber(n: Double?): String = n?.let { number(it) } ?: "—"
@@ -38,7 +41,7 @@ fun macroNumber(n: Double?): String = n?.let { number(it) } ?: "—"
 @Composable fun IconTile(icon: ImageVector, color: Color = Forest, bg: Color = Sage, size: Int = 44) {
     Box(Modifier.size(size.dp).clip(RoundedCornerShape(15.dp)).background(bg), contentAlignment = Alignment.Center) { Icon(icon, null, tint = color, modifier = Modifier.size(22.dp)) }
 }
-@Composable fun EmptyState(title: String, detail: String, icon: ImageVector = Icons.Outlined.Spa) {
+@Composable fun EmptyState(title: String, detail: String, icon: ImageVector = WellfitIcons.Brand) {
     Column(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(icon, null, Modifier.size(30.dp), tint = Forest.copy(alpha = .65f))
         Text(title, style = MaterialTheme.typography.titleMedium)
@@ -50,24 +53,31 @@ fun macroNumber(n: Double?): String = n?.let { number(it) } ?: "—"
         icon?.let { Icon(it, null, Modifier.size(19.dp)); Spacer(Modifier.width(9.dp)) }; Text(text)
     }
 }
-@Composable fun Macro(label: String, current: Double?, goal: Int, color: Color, modifier: Modifier = Modifier) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) { Box(Modifier.size(6.dp).background(color, CircleShape)); Spacer(Modifier.width(5.dp)); Text(label, style = MaterialTheme.typography.bodySmall, color = Muted) }
-        Text("${macroNumber(current)} g", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-        LinearProgressIndicator(progress = { if (goal > 0 && current != null) (current / goal).toFloat().coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth().height(5.dp).clip(CircleShape), color = color, trackColor = color.copy(alpha = .15f), drawStopIndicator = {})
-        Text("/ $goal g", style = MaterialTheme.typography.bodySmall, color = Muted)
-    }
-}
-@Composable fun CalorieRing(current: Int, goal: Int) {
-    val fraction by androidx.compose.animation.core.animateFloatAsState((current.toFloat() / goal).coerceIn(0f, 1f), label = "energy")
-    Box(Modifier.size(168.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize().padding(8.dp)) {
-            drawArc(Sage, -90f, 360f, false, style = Stroke(12.dp.toPx(), cap = StrokeCap.Round))
-            if (fraction > 0) drawArc(Forest, -90f, 360f * fraction, false, style = Stroke(12.dp.toPx(), cap = StrokeCap.Round))
+/**
+ * Öğün editöründeki eşit yükseklikte makro girişi. Boş değer "—" olarak görünür; böylece
+ * girilmemiş makro sıfır gibi okunmaz.
+ */
+@Composable fun MacroInput(value: String, onChange: (String) -> Unit, label: String, accent: Color, modifier: Modifier = Modifier) {
+    var focused by remember { mutableStateOf(false) }
+    Column(modifier.clip(RoundedCornerShape(16.dp)).background(accent.copy(alpha = .09f)).border(1.dp, accent.copy(alpha = .22f), RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            Box(Modifier.size(6.dp).background(accent, CircleShape))
+            Text(label, style = MaterialTheme.typography.labelMedium, color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(number(current), fontSize = 34.sp, letterSpacing = (-1.4).sp, fontWeight = FontWeight.Bold)
-            Text("kcal alındı", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) {
+                if (value.isBlank() && !focused) Text("—", style = MaterialTheme.typography.titleMedium, color = Muted.copy(alpha = .55f))
+                BasicTextField(
+                    value = value,
+                    onValueChange = { if (it.length <= 7) onChange(it) },
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }.semantics { contentDescription = "$label · g" },
+                    textStyle = MaterialTheme.typography.titleMedium.copy(color = Ink),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    cursorBrush = SolidColor(accent)
+                )
+            }
+            Text("g", style = MaterialTheme.typography.bodySmall, color = Muted)
         }
     }
 }

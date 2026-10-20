@@ -4,8 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,9 +43,9 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
     var target by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     LazyColumn(Modifier.fillMaxSize().safeDrawingPadding(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        item { Spacer(Modifier.height(20.dp)); IconTile(Icons.Outlined.Spa, size = 64); Spacer(Modifier.height(26.dp)); Text("Biraz daha iyi,\nher gün.", style = MaterialTheme.typography.headlineLarge); Spacer(Modifier.height(12.dp)); Text("Beslenmen, hareketin ve sana özel günlük özetin. Kendi ritmini bulacağın sakin bir alan.", color = Muted, style = MaterialTheme.typography.bodyLarge) }
+        item { Spacer(Modifier.height(20.dp)); IconTile(WellfitIcons.Brand, size = 64); Spacer(Modifier.height(26.dp)); Text("Wellfit", style = MaterialTheme.typography.headlineLarge); Spacer(Modifier.height(12.dp)); Text("Beslenme, adım, kilo ve antrenman takibi.", color = Muted, style = MaterialTheme.typography.bodyLarge) }
         item { Panel {
-            Text("Önce seni tanıyalım", style = MaterialTheme.typography.titleLarge)
+            Text("Profil", style = MaterialTheme.typography.titleLarge)
             FormField(name, { name = it }, "Sana nasıl hitap edelim?", max = 100)
             FormField(target, { target = it }, "Hedef kilo · kg (isteğe bağlı)", true, max = 6)
         } }
@@ -58,7 +56,7 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
         } }
         item {
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            PrimaryButton("Kendi dengemi kur", Icons.Outlined.ArrowForward, !busy) {
+            PrimaryButton("Başla", WellfitIcons.Arrow, !busy) {
                 runCatching { goals.validate(); require(target.isBlank() || target.decimal()?.let { it in 20.0..500.0 } == true) { "Hedef kiloyu kontrol et." } }
                     .onSuccess { save(profile.copy(name = name.trim(), goals = goals, targetWeight = target.decimal())) }.onFailure { error = it.message }
             }
@@ -85,7 +83,7 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
     var confirmHistoryImport by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     LazyColumn(Modifier.fillMaxSize().testTag("settings-list"), contentPadding = PaddingValues(22.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
-        item { Text("Senin düzenin.", style = MaterialTheme.typography.headlineLarge); Text("Hedefler, bağlantılar ve verilerin.", color = Muted) }
+        item { Text("Ayarlar", style = MaterialTheme.typography.headlineLarge); Text("Hedefler, bağlantılar ve verilerin.", color = Muted) }
         item { Panel {
             Section("Profil ve hedefler")
             FormField(name, { name = it }, "Adın", max = 100)
@@ -94,7 +92,7 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
             Text("Hedef değişiklikleri bugünün açık kaydına ve yeni günlere uygulanır. Kapalı günlerin hedefleri korunur.", style = MaterialTheme.typography.bodySmall, color = Muted)
         } }
         item { Panel {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { IconTile(Icons.Outlined.AutoAwesome); Column { Text("DeepSeek", style = MaterialTheme.typography.titleLarge); Text(if (hasDeepseek) "Anahtar güvenli olarak kayıtlı" else "Gününü anlayan bir özet", color = Muted, style = MaterialTheme.typography.bodySmall) } }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { IconTile(WellfitIcons.Ai); Column { Text("DeepSeek", style = MaterialTheme.typography.titleLarge); Text(if (hasDeepseek) "Anahtar güvenli olarak kayıtlı" else "AI öğün girişi ve günlük değerlendirme", color = Muted, style = MaterialTheme.typography.bodySmall) } }
             OutlinedTextField(deepseek, { if (it.length <= 512) deepseek = it }, Modifier.fillMaxWidth(), label = { Text(if (hasDeepseek) "Yeni API anahtarı (isteğe bağlı)" else "DeepSeek API anahtarı") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), shape = RoundedCornerShape(15.dp))
             FormField(model, { model = it }, "Model", max = 100)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -105,15 +103,15 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
             if (hasDeepseek) TextButton({ vm.removeKey("deepseek") }, enabled = !busy) { Text("DeepSeek anahtarını kaldır") }
         } }
         item { Panel {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { IconTile(Icons.Outlined.FitnessCenter, color = Color(0xFF817297), bg = Color(0xFFEEEAF4)); Column { Text("Hevy", style = MaterialTheme.typography.titleLarge); Text(if (hasHevy && state.hevy.verifiedAt != null) "Bağlantı doğrulandı" else if (hasHevy) "Anahtar kayıtlı · doğrulama bekliyor" else "Pro hesabını bağla", color = Forest, style = MaterialTheme.typography.bodySmall) } }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { IconTile(WellfitIcons.Workout, color = Color(0xFF817297), bg = Color(0xFFEEEAF4)); Column { Text("Hevy", style = MaterialTheme.typography.titleLarge); Text(if (hasHevy && state.hevy.verifiedAt != null) "Bağlantı doğrulandı" else if (hasHevy) "Anahtar kayıtlı · doğrulama bekliyor" else "Pro hesabını bağla", color = Forest, style = MaterialTheme.typography.bodySmall) } }
             Text("Hevy Pro API anahtarını geliştirici ayarlarından alıp buraya gir. Önce bağlantıyı doğrula, sonra geçmiş antrenmanlarını tek seferde içe aktar.", style = MaterialTheme.typography.bodyMedium, color = Muted)
-            TextButton({ uriHandler.openUri("https://hevy.com/settings?developer") }, enabled = !busy) { Icon(Icons.Outlined.OpenInNew, null, Modifier.size(16.dp)); Spacer(Modifier.width(7.dp)); Text("Hevy API anahtarını al") }
+            TextButton({ uriHandler.openUri("https://hevy.com/settings?developer") }, enabled = !busy) { Icon(WellfitIcons.External, null, Modifier.size(16.dp)); Spacer(Modifier.width(7.dp)); Text("Hevy API anahtarını al") }
             OutlinedTextField(hevy, { if (it.length <= 512) hevy = it }, Modifier.fillMaxWidth(), label = { Text(if (hasHevy) "Yeni Hevy anahtarı (isteğe bağlı)" else "Hevy API anahtarı") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), shape = RoundedCornerShape(15.dp))
-            PrimaryButton(if (hasHevy && hevy.isBlank()) "Bağlantıyı kontrol et" else "Bağlan ve doğrula", Icons.Outlined.Link, !busy && (hasHevy || hevy.isNotBlank())) { vm.connectHevy(hevy) { hevy = "" } }
+            PrimaryButton(if (hasHevy && hevy.isBlank()) "Bağlantıyı kontrol et" else "Bağlan ve doğrula", WellfitIcons.Link, !busy && (hasHevy || hevy.isNotBlank())) { vm.connectHevy(hevy) { hevy = "" } }
             if (hasHevy) {
                 state.hevy.workoutsOnAccount?.let { Text("Hevy hesabında ${number(it)} antrenman var.", style = MaterialTheme.typography.bodySmall, color = Forest) }
                 state.hevy.verifiedAt?.let { Text("Son doğrulama: ${connectionTime(it)}", color = Muted, style = MaterialTheme.typography.bodySmall) }
-                OutlinedButton({ confirmHistoryImport = true }, Modifier.fillMaxWidth(), enabled = !busy) { Icon(Icons.Outlined.CloudDownload, null, Modifier.size(18.dp)); Spacer(Modifier.width(7.dp)); Text("Antrenman geçmişini içe aktar") }
+                OutlinedButton({ confirmHistoryImport = true }, Modifier.fillMaxWidth(), enabled = !busy) { Icon(WellfitIcons.Download, null, Modifier.size(18.dp)); Spacer(Modifier.width(7.dp)); Text("Antrenman geçmişini içe aktar") }
                 Text(state.hevy.syncedAt?.let { "Son aktarım: ${connectionTime(it)}" } ?: "Henüz toplu aktarım yapılmadı.", style = MaterialTheme.typography.bodySmall, color = Muted)
             }
             hevyProgress?.let { Text(it, color = Forest, style = MaterialTheme.typography.bodyMedium) }
@@ -124,7 +122,7 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
             Section("Adımların", "Health Connect veya manuel giriş")
             Text("Huawei Sağlık verisi Health Connect'e aktarılıyorsa günlük toplamı okuyabiliriz. Huawei'ye doğrudan bağlantı kurulmaz. Aktarım yoksa adımları Huawei Sağlık'tan kendin girebilirsin.", color = Muted, style = MaterialTheme.typography.bodyMedium)
             Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Otomatik güncelle", style = MaterialTheme.typography.titleMedium); Text("Uygulama açıldığında. Manuel giriş korunur.", color = Muted, style = MaterialTheme.typography.bodySmall) }; Switch(healthEnabled, { healthEnabled = it }) }
-            OutlinedButton(onHealth, Modifier.fillMaxWidth(), enabled = !busy) { Icon(Icons.Outlined.Link, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Health Connect iznini ver") }
+            OutlinedButton(onHealth, Modifier.fillMaxWidth(), enabled = !busy) { Icon(WellfitIcons.Link, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Health Connect iznini ver") }
         } }
         item { Panel {
             Section("AI'nın hatırlayacakları")
@@ -133,20 +131,20 @@ private val GoalsSaver = listSaver<Goals, Int>(save = { listOf(it.calories, it.p
         } }
         item {
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            PrimaryButton("Ayarları kaydet", Icons.Outlined.Check, !busy) {
+            PrimaryButton("Ayarları kaydet", WellfitIcons.Check, !busy) {
                 runCatching { goals.validate(); require(target.isBlank() || target.decimal()?.let { it in 20.0..500.0 } == true) { "Hedef kiloyu kontrol et." }; require(model.matches(Regex("[a-zA-Z0-9._:-]{1,100}"))) { "Geçerli bir model adı gir." } }
                     .onSuccess { vm.profile(p.copy(name = name.trim(), goals = goals, targetWeight = target.decimal(), memory = memory.trim(), model = model.trim(), aiConsent = consent, healthEnabled = healthEnabled), deepseek.trim(), hevy.trim()) { deepseek = ""; hevy = "" } }
                     .onFailure { error = it.message }
             }
         }
         item { Panel(color = Color(0xFFEDF1E6)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.Shield, null, tint = Forest); Text("Hafızanı yanında tut", style = MaterialTheme.typography.titleLarge) }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { Icon(WellfitIcons.Shield, null, tint = Forest); Text("Yedekleme ve geri yükleme", style = MaterialTheme.typography.titleLarge) }
             Text("Kayıtlar telefonda saklanır ve her değişiklikte yerel kurtarma kopyası yazılır. Telefon kaybına ve uygulamayı kaldırmaya karşı JSON yedeğini farklı bir konuma kaydet.", style = MaterialTheme.typography.bodyMedium, color = Muted)
             Text(state.lastExportAt?.let { "Son dışa aktarım: ${it.take(10)}" } ?: "Henüz dışa aktarılmış yedek yok", style = MaterialTheme.typography.bodySmall, color = Forest)
-            PrimaryButton("JSON yedeği kaydet", Icons.Outlined.FileDownload, !busy, onExport)
+            PrimaryButton("JSON yedeği kaydet", WellfitIcons.Download, !busy, onExport)
             OutlinedButton(onImport, Modifier.fillMaxWidth(), enabled = !busy) { Text("Yedekten içe aktar") }
         } }
-        item { TextButton(onPrivacy, Modifier.fillMaxWidth()) { Text("Gizlilik ve veri kullanımı") }; Text("DENGE  /  1.2.0\nKüçük adımlar. Kalıcı alışkanlıklar.", Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Muted, style = MaterialTheme.typography.bodySmall) }
+        item { TextButton(onPrivacy, Modifier.fillMaxWidth()) { Text("Gizlilik ve veri kullanımı") }; Text("Wellfit  /  1.2.0", Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Muted, style = MaterialTheme.typography.bodySmall) }
     }
     if (confirmHistoryImport) AlertDialog(onDismissRequest = { confirmHistoryImport = false }, title = { Text("Hevy geçmişini içe aktar") }, text = { Text("Tüm antrenman sayfaları alınacak. Eksik günler eklenecek, açık günlerdeki Hevy kayıtları güncellenecek. Manuel kayıtların ve kapalı günlerin korunacak. Aynı antrenman tekrar eklenmeyecek.") }, confirmButton = { Button(onClick = { confirmHistoryImport = false; vm.importHevyHistory() }, enabled = !busy) { Text("Geçmişi içe aktar") } }, dismissButton = { TextButton({ confirmHistoryImport = false }) { Text("Vazgeç") } })
 }

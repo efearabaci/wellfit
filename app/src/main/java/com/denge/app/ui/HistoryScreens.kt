@@ -6,8 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,9 +29,9 @@ import java.time.format.DateTimeFormatter
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(22.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
         item { Text("Günün geride\nbıraktıkları.", style = MaterialTheme.typography.headlineLarge); Text("Seni hatırlayan, seninle gelişen bir günlük.", color = Muted) }
         item { Panel(color = Color(0xFFEAF0DF)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { IconTile(Icons.Outlined.AutoAwesome, bg = Color.White.copy(alpha = .7f)); Column(Modifier.weight(1f)) { Text("Denge hafızası", style = MaterialTheme.typography.titleLarge); Text("${state.days.values.count { it.hasData }} gün · ${state.days.values.sumOf { it.meals.size }} öğün · ${state.days.values.sumOf { it.workouts.size }} antrenman", style = MaterialTheme.typography.bodySmall, color = Forest) } }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { IconTile(WellfitIcons.Memory, bg = Color.White.copy(alpha = .7f)); Column(Modifier.weight(1f)) { Text("Wellfit hafızası", style = MaterialTheme.typography.titleLarge); Text("${state.days.values.count { it.hasData }} gün · ${state.days.values.sumOf { it.meals.size }} öğün · ${state.days.values.sumOf { it.workouts.size }} antrenman", style = MaterialTheme.typography.bodySmall, color = Forest) } }
             Text("Günlük kayıtların, haftalık ve aylık durumun, antrenman detayların ve kalıcı notların her değerlendirmede bir araya gelir.", color = Forest, style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton(export, enabled = !busy, shape = RoundedCornerShape(14.dp)) { Icon(Icons.Outlined.FileDownload, null, Modifier.size(17.dp)); Spacer(Modifier.width(7.dp)); Text("Hafızayı Markdown olarak al") }
+            OutlinedButton(export, enabled = !busy, shape = RoundedCornerShape(14.dp)) { Icon(WellfitIcons.Download, null, Modifier.size(17.dp)); Spacer(Modifier.width(7.dp)); Text("Hafızayı Markdown olarak al") }
         } }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -46,9 +44,9 @@ import java.time.format.DateTimeFormatter
         }
         item { Panel {
             when {
-                !day.closed -> EmptyState("Günün henüz devam ediyor", "Son öğününden sonra Bugün ekranında 'Günü kapat'a dokun. Özetin burada seni bekleyecek.", Icons.Outlined.Nightlight)
+                !day.closed -> EmptyState("Günün henüz devam ediyor", "Son öğününden sonra Bugün ekranında 'Günü kapat'a dokun. Özetin burada seni bekleyecek.", WellfitIcons.Moon)
                 recap?.status == "ready" -> {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Icon(Icons.Outlined.AutoAwesome, null, tint = Forest, modifier = Modifier.size(20.dp)); Text("Günün değerlendirmesi", style = MaterialTheme.typography.titleMedium) }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Icon(WellfitIcons.Memory, null, tint = Forest, modifier = Modifier.size(20.dp)); Text("Günün değerlendirmesi", style = MaterialTheme.typography.titleMedium) }
                     SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { recap.text.split("\n").filter { it.isNotBlank() }.forEach { line ->
                         val heading = line.startsWith("#") || (line.startsWith("**") && line.endsWith("**"))
                         Text(line.trimStart('#', ' ').replace("**", ""), style = if (heading) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium)
@@ -60,12 +58,12 @@ import java.time.format.DateTimeFormatter
                     val consent = state.profile.aiConsent
                     EmptyState(if (!consent) "Günün güvenle kaydedildi" else if (recap?.status == "failed") "Özet tamamlanamadı" else "Özet için her şey kayıtlı",
                         if (!consent) "AI özeti istersen Ayarlar'dan DeepSeek bağlantısını ve veri paylaşımını aç."
-                        else recap?.error?.takeIf { it.isNotBlank() } ?: "Bağlantı ve API anahtarı hazır olduğunda özetin oluşturulacak. Uygulamayı kapatabilirsin.", Icons.Outlined.CloudQueue)
+                        else recap?.error?.takeIf { it.isNotBlank() } ?: "Bağlantı ve API anahtarı hazır olduğunda özetin oluşturulacak. Uygulamayı kapatabilirsin.", WellfitIcons.Cloud)
                     if (recap?.status == "running") Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { CircularProgressIndicator(Modifier.size(24.dp), color = Forest) }
-                    PrimaryButton(if (recap?.status == "failed") "Yeniden dene" else "Özeti oluştur / tekrar dene", Icons.Outlined.AutoAwesome, !busy && recap?.status != "running", retry)
+                    PrimaryButton(if (recap?.status == "failed") "Yeniden dene" else "Özeti oluştur / tekrar dene", WellfitIcons.Memory, !busy && recap?.status != "running", retry)
                 }
             }
-            if (day.closed) TextButton(prompt, Modifier.fillMaxWidth()) { Icon(Icons.Outlined.DataObject, null, Modifier.size(16.dp)); Spacer(Modifier.width(7.dp)); Text("AI'ya gönderilen veriyi incele") }
+            if (day.closed) TextButton(prompt, Modifier.fillMaxWidth()) { Icon(WellfitIcons.Code, null, Modifier.size(16.dp)); Spacer(Modifier.width(7.dp)); Text("AI'ya gönderilen veriyi incele") }
         } }
         if (day.closed) item { Panel {
             Section("Kaydının özeti")

@@ -4,8 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -70,7 +68,7 @@ import java.time.temporal.ChronoUnit
     val known = entries.filter { it.second != null }
     Panel {
         Section(title, "$unit · ${known.size} gün için kayıt var")
-        if (known.isEmpty()) EmptyState("Bu dönemde ölçüm yok", "Kayıt geldikçe grafik dolacak.", Icons.Outlined.BarChart)
+        if (known.isEmpty()) EmptyState("Bu dönemde ölçüm yok", "Kayıt geldikçe grafik dolacak.", WellfitIcons.Bars)
         else {
             val maxValue = maxOf(1.0, known.maxOf { it.second!! })
             Row(Modifier.fillMaxWidth().height(140.dp), horizontalArrangement = Arrangement.spacedBy(if (entries.size > 10) 3.dp else 9.dp), verticalAlignment = Alignment.Bottom) {
@@ -117,7 +115,7 @@ import java.time.temporal.ChronoUnit
     Panel {
         Section("Kilo eğrin", "Ölçülen günler arasında çizilir; ara günler tahmin edilmez.")
         val weights = stats.weightDays
-        if (weights.isEmpty()) EmptyState("İlk tartı kaydınla başla", "Her gün tartılmak zorunda değilsin; girdiğin ölçümler burada kalır.", Icons.Outlined.MonitorWeight)
+        if (weights.isEmpty()) EmptyState("İlk tartı kaydınla başla", "Her gün tartılmak zorunda değilsin; girdiğin ölçümler burada kalır.", WellfitIcons.Weight)
         else {
             val min = weights.minOf { it.weight!! } - .5
             val max = weights.maxOf { it.weight!! } + .5

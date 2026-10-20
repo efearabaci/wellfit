@@ -17,12 +17,11 @@ class AiMealJourneyTest {
     private val vm get() = ViewModelProvider(ui.activity)[DengeViewModel::class.java]
     @Before fun setup() {
         runBlocking { original = graph.repo.read(); graph.repo.update { AppState(profile = Profile(name = "Test", onboarded = true)) } }
-        ui.waitUntil(10000) { ui.onAllNodesWithText("Merhaba, Test.").fetchSemanticsNodes().isNotEmpty() }
+        ui.waitUntil(10000) { ui.onAllNodesWithTag("today-summary").fetchSemanticsNodes().isNotEmpty() }
     }
     @After fun restore() { if (::original.isInitialized) runBlocking { graph.repo.update { original } } }
     private fun openAi() {
-        ui.onNodeWithTag("today-list").performScrollToNode(hasText("Öğün ekle"))
-        ui.onNodeWithText("Öğün ekle").performClick()
+        ui.onNodeWithTag("meal-fab").performClick()
         ui.onNodeWithText("AI ile anlat").performClick()
     }
     private fun screenshot(name: String) {

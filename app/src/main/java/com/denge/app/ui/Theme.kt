@@ -10,9 +10,9 @@ import androidx.compose.ui.unit.sp
 
 val Forest = Color(0xFF264F3E)
 val Sage = Color(0xFFDCE8D0)
-val CanvasColor = Color(0xFFF7F8F2)
+val CanvasColor = Color(0xFFF5F6F3)
 val Ink = Color(0xFF202D26)
-val Muted = Color(0xFF7A847B)
+val Muted = Color(0xFF626E66)
 val Orange = Color(0xFFCB8653)
 val Lilac = Color(0xFFAAA0C4)
 val Line = Color(0xFFE5E9DF)

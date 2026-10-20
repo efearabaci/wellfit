@@ -6,13 +6,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -21,6 +21,20 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() }
+
+/**
+ * Saat alanı: haneler yazılırken HH:mm maskesi uygulanır ve imleç her zaman metnin sonuna alınır.
+ * Böylece "1220" yazmak "12:20" üretir; ondalık klavye açılır, iki nokta girmeye gerek kalmaz.
+ */
+@Composable fun TimeField(value: String, onValueChange: (String) -> Unit, label: String, modifier: Modifier = Modifier) {
+    var field by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    LaunchedEffect(value) { if (value != field.text) field = TextFieldValue(value, TextRange(value.length)) }
+    OutlinedTextField(field, { candidate ->
+        val formatted = formatTimeInput(candidate.text)
+        field = candidate.copy(text = formatted, selection = TextRange(formatted.length))
+        onValueChange(formatted)
+    }, modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true, shape = RoundedCornerShape(15.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+}
 @Composable fun FormField(value: String, onChange: (String) -> Unit, label: String, numeric: Boolean = false, modifier: Modifier = Modifier, max: Int = 200, lines: Int = 1) {
     OutlinedTextField(value, { if (it.length <= max) onChange(it) }, modifier.fillMaxWidth(), label = { Text(label) }, singleLine = lines == 1, minLines = lines, shape = RoundedCornerShape(15.dp), keyboardOptions = KeyboardOptions(keyboardType = if (numeric) KeyboardType.Decimal else KeyboardType.Text))
 }
@@ -30,7 +44,7 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
             Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                    IconButton(dismiss, enabled = !busy) { Icon(Icons.Outlined.Close, "Kapat") }
+                    IconButton(dismiss, enabled = !busy) { Icon(WellfitIcons.Close, "Kapat") }
                 }
                 content()
             }
@@ -48,8 +62,7 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
     var error by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
     Editor(if (meal == null) "Yeni öğün" else "Öğünü düzenle", busy, dismiss) {
-        Text("Hesapladığın değerleri ekle. Hepsi bu.", color = Muted)
-        onAi?.let { TextButton(it, enabled = !busy) { Icon(Icons.Outlined.AutoAwesome, null); Spacer(Modifier.width(8.dp)); Text("AI ile anlat") } }
+        onAi?.let { TextButton(it, enabled = !busy, contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp)) { Icon(WellfitIcons.Ai, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("AI ile anlat") } }
         meal?.aiSourceText?.let {
             Tag("AI destekli kayıt")
             Text(meal.aiNote ?: "Besin değerleri tahmini olabilir; kontrol edip düzenleyebilirsin.", color = Muted, style = MaterialTheme.typography.bodySmall)
@@ -58,27 +71,33 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("Kahvaltı", "Öğle", "Akşam", "Ara öğün").forEach { FilterChip(selected = category == it, onClick = { category = it }, label = { Text(it) }) }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        HorizontalDivider(color = Line)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.Top) {
             FormField(calories, { calories = it }, "Kalori · kcal", true, Modifier.weight(1f), max = 5)
-            FormField(time, { time = it }, "Saat · SS:dd", modifier = Modifier.weight(1f), max = 5)
+            TimeField(time, { time = it }, "Saat", modifier = Modifier.weight(1f))
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FormField(protein, { protein = it }, "Protein · g", true, Modifier.weight(1f), max = 7)
-            FormField(carbs, { carbs = it }, "Karb. · g", true, Modifier.weight(1f), max = 7)
-            FormField(fat, { fat = it }, "Yağ · g", true, Modifier.weight(1f), max = 7)
+        Text("1220 yazarsan saat kendiliğinden 12:20 olur.", style = MaterialTheme.typography.bodySmall, color = Muted)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+            Text("Makrolar", style = MaterialTheme.typography.titleMedium)
+            Text("Karb. ve yağ isteğe bağlı", style = MaterialTheme.typography.bodySmall, color = Muted)
         }
-        Text("Karbonhidrat ve yağ isteğe bağlı. Boş bıraktıkların bilinmiyor olarak saklanır; sıfır sayılmaz. Gram için virgül veya nokta kullanabilirsin.", style = MaterialTheme.typography.bodySmall, color = Muted)
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MacroInput(protein, { protein = it }, "Protein", Forest, Modifier.weight(1f).fillMaxHeight())
+            MacroInput(carbs, { carbs = it }, "Karb.", Orange, Modifier.weight(1f).fillMaxHeight())
+            MacroInput(fat, { fat = it }, "Yağ", Lilac, Modifier.weight(1f).fillMaxHeight())
+        }
+        Text("Boş bıraktığın makro bilinmiyor olarak saklanır; sıfır sayılmaz. Gram için virgül veya nokta kullanabilirsin.", style = MaterialTheme.typography.bodySmall, color = Muted)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-        PrimaryButton("Öğünü kaydet", Icons.Outlined.Check, !busy) {
+        PrimaryButton("Öğünü kaydet", WellfitIcons.Check, !busy) {
             runCatching {
                 val c = calories.toIntOrNull() ?: error("Kaloriyi tam sayı olarak gir.")
                 val p = protein.decimal() ?: error("Protein miktarını gir.")
                 val k = if (carbs.isBlank()) null else carbs.decimal() ?: error("Karbonhidrat değerini kontrol et.")
                 val f = if (fat.isBlank()) null else fat.decimal() ?: error("Yağ değerini kontrol et.")
-                val parsed = LocalTime.parse(time).format(DateTimeFormatter.ofPattern("HH:mm"))
+                val parsed = parseTimeInput(time) ?: error("Saati 12:20 biçiminde gir. 1220 yazman da yeterli.")
                 (meal?.copy(name = name.trim(), category = category, time = parsed, calories = c, protein = p, carbs = k, fat = f)
                     ?: Meal(name = name.trim(), category = category, time = parsed, calories = c, protein = p, carbs = k, fat = f)).also { it.validate() }
-            }.onSuccess(save).onFailure { error = if (it is java.time.format.DateTimeParseException) "Saati 14:30 biçiminde gir." else it.message }
+            }.onSuccess(save).onFailure { error = it.message }
         }
         if (meal != null) TextButton({ confirmDelete = true }, Modifier.fillMaxWidth(), enabled = !busy) { Text("Öğünü sil", color = MaterialTheme.colorScheme.error) }
     }
@@ -107,9 +126,9 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
 }
 @Composable fun NoteEditor(note: String, busy: Boolean, dismiss: () -> Unit, save: (String) -> Unit) {
     var text by rememberSaveable { mutableStateOf(note) }
-    Editor("Gününden bir not", busy, dismiss) {
-        Text("Nasıl hissettin? AI özetin bu notu da dikkate alır.", color = Muted)
-        FormField(text, { text = it }, "Bugün…", max = 10000, lines = 5)
+    Editor("Gün notu", busy, dismiss) {
+        Text("Bu not, gün sonu değerlendirmesinde kullanılır.", color = Muted)
+        FormField(text, { text = it }, "Not", max = 10000, lines = 5)
         PrimaryButton("Notu kaydet", enabled = !busy) { save(text.trim()) }
     }
 }
@@ -150,7 +169,7 @@ fun String.decimal(): Double? = replace(',', '.').toDoubleOrNull()?.takeIf { it.
     Dialog(dismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().padding(20.dp), shape = RoundedCornerShape(24.dp)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Gönderim kaydı", style = MaterialTheme.typography.titleLarge); IconButton(dismiss) { Icon(Icons.Outlined.Close, "Kapat") } }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Gönderim kaydı", style = MaterialTheme.typography.titleLarge); IconButton(dismiss) { Icon(WellfitIcons.Close, "Kapat") } }
                 Text("Sistem talimatı ve kapatılan günün değişmez veri kopyası. ${number(prompt.length)} karakter veri.", style = MaterialTheme.typography.bodySmall, color = Muted)
                 SelectionContainer { LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     item { Text(MemoryBuilder.SYSTEM, style = MaterialTheme.typography.bodySmall) }

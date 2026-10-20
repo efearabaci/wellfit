@@ -1,10 +1,12 @@
-# Denge
+# Wellfit
 
 Kotlin + Jetpack Compose ile geliştirilmiş, Türkçe ve önce çevrimdışı çalışan kişisel beslenme ve hareket günlüğü. Android 9 (API 28) ve üzeri.
 
+Ekranları, kullanıcı akışlarını ve özellikleri görsel tasarımdan bağımsız anlatan [tasarım promptu](docs/WELLFIT_DESIGN_PROMPT.md). Bugün ekranının renkleri, bölüm düzeni ve ikon envanteri [tasarım notunda](docs/WELLFIT_TODAY_DESIGN.md).
+
 ## Kurulum
 
-Yerel kurulum paketi: `dist/Denge-1.2.0.apk`. Derleme çıktıları Git reposuna eklenmez. Paketi `./gradlew assembleRelease` ile üretip `app/build/outputs/apk/release/app-release.apk` konumundan telefona aktararak yükleyebilirsin. Bu paket R8 ile küçültülmüş ve geliştirme anahtarıyla imzalanmış kişisel kurulum sürümüdür; mağaza dağıtımı için özel imzalama anahtarı gerekir.
+Uygulama adı **Wellfit**. Derleme çıktıları Git reposuna eklenmez. Paketi `./gradlew assembleRelease` ile üretip `app/build/outputs/apk/release/app-release.apk` konumundan telefona aktararak yükleyebilirsin. Bu paket R8 ile küçültülmüş ve geliştirme anahtarıyla imzalanmış kişisel kurulum sürümüdür; mağaza dağıtımı için özel imzalama anahtarı gerekir.
 
 Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yapılandırmasını çalıştır. JDK 17 veya 21, Android SDK 36 gerekir. Bilgisayara özel `local.properties` dosyasını kendi SDK yolunla oluştur; dosya sürüm kontrolüne dahil değildir.
 
@@ -18,12 +20,12 @@ Android Studio ile bu klasörü aç, Gradle eşitlemesini tamamla ve **app** yap
 ## Kullanım
 
 1. İlk açılışta adını ve kendi planındaki günlük kalori, makro ve adım hedeflerini gir. Başlangıç değerleri kişisel bir beslenme önerisi değildir.
-2. **Bugün** ekranında her öğünü yedikten sonra adını, saatini, kalorisini ve proteinini ekle. Karbonhidrat ve yağ isteğe bağlıdır; boş alanlar sıfır sayılmaz. İstersen **AI ile anlat** seçeneğini kullan. Kayıtlar hemen telefona yazılır. Öğüne dokunarak düzenleyebilir veya silebilirsin.
+2. **Bugün** ekranında sağ alttaki **Öğün ekle** düğmesine (veya öğünler bölümündeki **+** düğmesine) dokun. Öğünün adını, saatini, kalorisini ve proteinini gir. Saat alanında `1220` yazman yeterlidir; kendiliğinden `12:20` olur. Karbonhidrat ve yağ isteğe bağlıdır; boş alanlar sıfır sayılmaz. İstersen **AI ile anlat** seçeneğini kullan. Kayıtlar hemen telefona yazılır. Öğüne dokunarak düzenleyebilir veya silebilirsin.
 3. Adım/kilo kartına dokunup Huawei Sağlık'taki günlük toplamı ve istersen tartı kaydını gir. Boş adım alanı bilinmeyendir; `0` gerçek sıfır kaydıdır.
 4. Antrenmanını kendin ekle veya **Hevy'den al** düğmesini kullan. Antrenmansız günlerde **Bugün dinleniyorum** seçeneği bulunur.
 5. Son öğününden sonra **Günü kapat**. Gün kendiliğinden kapanmaz. Kapalı gün yeniden açılıp düzenlenebilir; eski AI sonucu arşivlenir.
 6. **Gidişat** ekranında gerçek takvim haftaları ve aylar arasında gezin. Genel, Beslenme, Hareket ve Kilo bölümlerinden istatistiklerini incele. Takvimde bir güne dokunarak o günün kayıtlarını aç. **Hafıza** ekranında AI değerlendirmelerini gör.
-7. **Ayarlar → JSON yedeği kaydet** ile düzenli dış yedek al. **Hafıza** ekranından okunabilir Markdown çıktısı da alabilirsin.
+7. **Ayarlar → JSON yedeği kaydet** ile düzenli dış yedek al. **Hafıza** ekranından okunabilir Markdown çıktısı da alabilirsin. Ayarlar alt sekmede değil, üst çubuğun sağındaki ayar simgesindedir.
 
 ## Bağlantılar
 

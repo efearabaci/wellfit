@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <queries><package android:name="com.google.android.apps.healthdata" /></queries>
-    <application android:name=".DengeApplication" android:label="Denge" android:icon="@drawable/ic_denge" android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="false" android:supportsRtl="true" android:theme="@style/Theme.Denge" android:usesCleartextTraffic="false">
+    <application android:name=".DengeApplication" android:label="Wellfit" android:icon="@drawable/ic_wellfit" android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="false" android:supportsRtl="true" android:theme="@style/Theme.Wellfit" android:usesCleartextTraffic="false">
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>

@@ -3,8 +3,6 @@ package com.denge.app.ui
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -20,6 +18,7 @@ import java.time.format.DateTimeFormatter
     val draft by vm.aiMealDraft.collectAsStateWithLifecycle()
     var category by rememberSaveable { mutableStateOf("Öğle") }
     var time by rememberSaveable { mutableStateOf(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))) }
+    var timeError by remember { mutableStateOf<String?>(null) }
     var editId by rememberSaveable { mutableStateOf<String?>(null) }
     val edit = draft.meals.firstOrNull { it.id == editId }
     if (edit != null) {
@@ -41,7 +40,8 @@ import java.time.format.DateTimeFormatter
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("Kahvaltı", "Öğle", "Akşam", "Ara öğün").forEach { label -> FilterChip(category == label, { category = label }, label = { Text(label) }) }
                 }
-                FormField(time, { time = it }, "Saat belirtilmezse · SS:dd", max = 5)
+                TimeField(time, { time = it; timeError = null }, "Saat belirtilmezse")
+                Text("1220 yazarsan 12:20 olarak ayarlanır.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 Text("Hazırla'ya dokunduğunda yalnızca bu metin ve öğün/saat seçimin DeepSeek'e gönderilir. Kayıt geçmişin paylaşılmaz. Kendi API hesabından ücretlendirilir.", color = Muted, style = MaterialTheme.typography.bodySmall)
             } else {
                 Text(draft.text, color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis)
@@ -49,12 +49,17 @@ import java.time.format.DateTimeFormatter
             }
             if (!vm.graph.secrets.has("deepseek") && draft.meals.isEmpty()) {
                 Text("AI ile eklemek için DeepSeek API anahtarını Ayarlar'a kaydet.", color = Forest)
-                PrimaryButton("DeepSeek ayarlarını aç", Icons.Outlined.Settings, !busy, settings)
+                PrimaryButton("DeepSeek ayarlarını aç", WellfitIcons.Settings, !busy, settings)
             } else if (draft.meals.isEmpty()) {
-                PrimaryButton("Öğünleri hazırla", Icons.Outlined.AutoAwesome, !busy && draft.text.isNotBlank()) { vm.understandMeals(category, time) }
+                PrimaryButton("Öğünleri hazırla", WellfitIcons.Ai, !busy && draft.text.isNotBlank()) {
+                    val normalized = parseTimeInput(time) ?: if (time.isBlank()) LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) else null
+                    if (normalized == null) timeError = "Saati 12:20 biçiminde gir. 1220 yazman da yeterli."
+                    else { time = normalized; vm.understandMeals(category, normalized) }
+                }
             }
         }
         draft.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        timeError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         if (draft.message.isNotBlank()) Text(draft.message, color = Forest)
         if (draft.meals.isNotEmpty()) {
             Text("Kontrol et ve ekle", style = MaterialTheme.typography.titleMedium)
@@ -69,7 +74,7 @@ import java.time.format.DateTimeFormatter
                     TextButton({ vm.removeAiMeal(meal.id) }, enabled = !busy) { Text("Çıkar") }
                 }
             } }
-            PrimaryButton("${draft.meals.size} öğünü günlüğe ekle", Icons.Outlined.Check, !busy) { vm.saveAiMeals(date, saved) }
+            PrimaryButton("${draft.meals.size} öğünü günlüğe ekle", WellfitIcons.Check, !busy) { vm.saveAiMeals(date, saved) }
         }
         TextButton(manual, enabled = !busy) { Text("Değerleri kendim gireceğim") }
     }

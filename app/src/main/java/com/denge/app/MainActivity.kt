@@ -19,7 +19,7 @@ class PrivacyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); setContent { DengeTheme {
         Surface { Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Text("Verilerin senin kontrolünde.", style = MaterialTheme.typography.headlineMedium)
-            Text("Denge yalnızca izin verdiğin günlük adım toplamını Health Connect'ten okur. Verilerin telefonundaki uygulama alanında saklanır. Otomatik bulut yedeklemesi kapalıdır.")
+            Text("Wellfit yalnızca izin verdiğin günlük adım toplamını Health Connect'ten okur. Verilerin telefonundaki uygulama alanında saklanır. Otomatik bulut yedeklemesi kapalıdır.")
             Text("AI paylaşımını etkinleştirip günü kapattığında, profil notların ve kayıt geçmişin DeepSeek'e özet üretmek için gönderilir. Paylaşımı Ayarlar'dan kapatabilirsin. Hevy yalnızca eşitleme istediğinde API anahtarınla okunur.")
             Text("Öğün eklerken AI ile hazırla seçeneğini kullanırsan yalnızca yazdığın yemek açıklaması ve öğün/saat seçimin DeepSeek'e gönderilir. Bu işlem günlük değerlendirme ayarından bağımsızdır. AI besin değerleri tahmini olabilir; kaydetmeden önce düzenleyebilirsin.")
             Text("API anahtarların Android Keystore ile şifrelenir, yedeklere eklenmez. JSON ve Markdown dışa aktarımları kişisel kayıtlarını içerir; saklayacağın yeri sen seçersin.")

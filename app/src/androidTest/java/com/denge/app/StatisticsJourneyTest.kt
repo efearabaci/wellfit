@@ -20,7 +20,7 @@ class StatisticsJourneyTest {
             val training = Day(date.toString(), workouts = listOf(Workout(id = "morning", title = "Sabah antrenmanı", minutes = 35), Workout(id = "evening", title = "Akşam antrenmanı", minutes = 65)), workoutStatus = "trained")
             graph.repo.update { AppState(profile = Profile(name = "İstatistik Testi", onboarded = true), days = mapOf(training.date to training)) }
         }
-        ui.waitUntil(10000) { ui.onAllNodesWithText("Merhaba, İstatistik Testi.").fetchSemanticsNodes().isNotEmpty() }
+        ui.waitUntil(10000) { ui.onAllNodesWithTag("today-summary").fetchSemanticsNodes().isNotEmpty() }
     }
     @After fun restore() { if (::original.isInitialized) runBlocking { graph.repo.update { original } } }
     private fun screenshot(name: String) {
@@ -65,7 +65,7 @@ class StatisticsJourneyTest {
     }
     @Test fun hevyConnectionRequiresAnExplicitKeyAndNeverUsesAChatCredential() {
         if (graph.secrets.has("hevy")) return
-        ui.onNodeWithText("Ayarlar").performClick()
+        ui.onNodeWithContentDescription("Ayarlar").performClick()
         ui.onNodeWithTag("settings-list").performScrollToNode(hasText("Bağlan ve doğrula"))
         ui.onNodeWithText("Bağlan ve doğrula").assertIsNotEnabled()
         screenshot("08-hevy-connection.png")
